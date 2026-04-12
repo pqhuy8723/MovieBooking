@@ -1,0 +1,22 @@
+# ===== Backend =====
+be/target/
+be/build/
+
+# ===== Frontend (React) =====
+fe/node_modules/
+fe/build/
+fe/dist/
+
+# ===== Env =====
+.env
+*.env
+
+# ===== IDE =====
+.idea/
+.vscode/
+
+# ===== Logs =====
+*.log
+
+# ===== OS =====
+.DS_Store
