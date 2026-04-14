@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Card, Button, Form, InputGroup, Modal } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-// Removed API service imports
+import { useAuth } from "../../context/AuthContext";
+import authService from "../../services/authService";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "../../CSS/LoginRegister.css";
 
@@ -27,6 +28,7 @@ const LoginRegister = () => {
   const [popupContent, setPopupContent] = useState({ title: "", message: "" });
   const [resetValidationErrors, setResetValidationErrors] = useState({});
 
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,30 +39,33 @@ const LoginRegister = () => {
       setPassword(password);
       setRemember(true);
     }
+  }, []);
 
-    const account = localStorage.getItem("account");
-    if (account) {
+  // Nếu người dùng đã login (có cookie chuẩn) thì nhảy qua index
+  useEffect(() => {
+    if (isAuthenticated) {
       navigate("/");
     }
-  }, [navigate]);
+  }, [isAuthenticated, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setTimeout(() => {
-      // Mock login Check
-      if (email === "admin@gmail.com") {
-        const user = { id: 1, email: "admin@gmail.com", full_name: "Admin", role: "admin" };
-        if (remember) {
-          localStorage.setItem("rememberedAccount", JSON.stringify(user));
-        } else {
-          localStorage.removeItem("rememberedAccount");
-        }
-        sessionStorage.setItem("account", JSON.stringify(user));
-        window.location.replace("/");
+    setIsSubmitting(true);
+
+    const result = await login(email, password);
+
+    if (result.success) {
+      if (remember) {
+        localStorage.setItem("rememberedAccount", JSON.stringify({ email, password }));
       } else {
-        setErrorMessage("Email hoặc mật khẩu không chính xác (Thử admin@gmail.com)");
+        localStorage.removeItem("rememberedAccount");
       }
-    }, 300);
+      navigate("/");
+    } else {
+      setErrorMessage(result.message);
+    }
+
+    setIsSubmitting(false);
   };
   const validateResetPassword = () => {
     const resetValidationErrors = {};
@@ -70,7 +75,7 @@ const LoginRegister = () => {
     }
     if (!newPassword) {
       resetValidationErrors.newPassword = "Mật khẩu không được bỏ trống!";
-    } else if (!passwordRegex.test(newPassword)) { 
+    } else if (!passwordRegex.test(newPassword)) {
       resetValidationErrors.newPassword = "Mật khẩu phải có ít nhất 8 ký tự, ít nhất 1 chữ hoa và 1 số!";
     }
 
@@ -139,10 +144,24 @@ const LoginRegister = () => {
     const isValid = await validateFields();
     if (!isValid) return;
 
-    setTimeout(() => {
+    setIsSubmitting(true);
+    setErrorMessage("");
+
+    try {
+      await authService.register({
+        fullName: full_name,
+        email,
+        password,
+        phone,
+        gender
+      });
       setShowSuccessModal(true);
       setCurrentForm("login");
-    }, 500);
+    } catch (error) {
+      setErrorMessage(error.response?.data?.message || "Đăng ký thất bại, thử lại sau!");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleForgotPassword = async (e) => {
@@ -166,15 +185,15 @@ const LoginRegister = () => {
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
-     const isValid = validateResetPassword();
+    const isValid = validateResetPassword();
     if (!isValid) return;
     setTimeout(() => {
-        setPopupContent({
-          title: "Thay đổi thành công",
-          message: "Mật khẩu đã được thay đổi.",
-        });
-        setPopupVisible(true);
-        setCurrentForm("login");
+      setPopupContent({
+        title: "Thay đổi thành công",
+        message: "Mật khẩu đã được thay đổi.",
+      });
+      setPopupVisible(true);
+      setCurrentForm("login");
     }, 500);
   };
   const handleCancel = () => {
@@ -530,10 +549,11 @@ const LoginRegister = () => {
                     <Form.Control
                       type="text"
                       value={resetToken}
-                      onChange={(e) => {setResetToken(e.target.value); setErrorMessage(""); setResetValidationErrors((prevErrors) => ({
-                        ...prevErrors,
-                        resetToken: "",
-                      }))
+                      onChange={(e) => {
+                        setResetToken(e.target.value); setErrorMessage(""); setResetValidationErrors((prevErrors) => ({
+                          ...prevErrors,
+                          resetToken: "",
+                        }))
                       }}
                       placeholder="Nhập mã reset"
                       isInvalid={!!resetValidationErrors.resetToken}
@@ -573,7 +593,7 @@ const LoginRegister = () => {
                     <Form.Control
                       type="password"
                       value={confirmNewPassword}
-                      onChange={(e) => {setConfirmNewPassword(e.target.value); setErrorMessage(""); setResetValidationErrors((prevErrors) => ({...prevErrors, confirmNewPassword: ""}))}}
+                      onChange={(e) => { setConfirmNewPassword(e.target.value); setErrorMessage(""); setResetValidationErrors((prevErrors) => ({ ...prevErrors, confirmNewPassword: "" })) }}
                       placeholder="Xác nhận mật khẩu mới"
                       isInvalid={!!resetValidationErrors.confirmNewPassword}
                     />

@@ -1,37 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Container, Row, Col, Navbar, Nav, Dropdown } from "react-bootstrap";
+import { useAuth } from "../../context/AuthContext";
 import "../../CSS/Header.css";
 
 function Header() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [username, setUsername] = useState("");
-  const [role, setRole] = useState("");
+  const { user, isAuthenticated, logout } = useAuth();
   const [greeting, setGreeting] = useState("");
-  const [userId, setUserId] = useState("");
   const location = useLocation();
-
-  const updateUserData = () => {
-    const sessionUser = JSON.parse(sessionStorage.getItem("account"));
-    const localUser = JSON.parse(localStorage.getItem("rememberedAccount"));
-
-    if (sessionUser) {
-      setIsLoggedIn(true);
-      setUsername(sessionUser.full_name);
-      setRole(sessionUser.role);
-      setUserId(sessionUser.id);
-    } else if (localUser) {
-      setIsLoggedIn(true);
-      setUsername(localUser.full_name);
-      setRole(localUser.role);
-      setUserId(localUser.id);
-    } else {
-      setIsLoggedIn(false);
-      setUsername("");
-      setRole("");
-      setUserId("");
-    }
-  };
 
   const updateGreeting = () => {
     const hour = new Date().getHours();
@@ -47,18 +23,12 @@ function Header() {
   };
 
   useEffect(() => {
-    updateUserData();
     updateGreeting();
   }, [location.pathname]);
 
-  const handleLogout = () => {
-    sessionStorage.removeItem("account");
-    localStorage.removeItem("rememberedAccount");
-    setIsLoggedIn(false);
-    setUsername("");
-    setRole("");
-    setUserId("");
-    window.location.replace("/");
+  const handleLogout = async (e) => {
+    e.preventDefault();
+    await logout();
   };
 
   const isActive = (path) => location.pathname === path ? 'active-tab' : '';
@@ -69,11 +39,11 @@ function Header() {
         <Container fluid className="bg-black" style={{ padding: "4px 0" }}>
           <Row>
             <Col className="Sig">
-            {isLoggedIn ? (
+            {isAuthenticated && user ? (
               <>
-                <Link to={`/profile/${userId}`} className="text-decoration-none">
+                <Link to={`/profile/${user.id}`} className="text-decoration-none">
                   <span className="fancy-font">
-                    {greeting}, {username}!
+                    {greeting}, {user.full_name || user.email}!
                   </span>
                 </Link>
                 <Link
@@ -143,7 +113,7 @@ function Header() {
               >
                 Giá Vé
               </Nav.Link>
-              {role === "1" && (
+              {user?.role?.toString() === "1" && (
                 <Dropdown align="end">
                   <Dropdown.Toggle
                     variant="link"
