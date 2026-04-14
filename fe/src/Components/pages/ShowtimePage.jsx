@@ -27,41 +27,35 @@ function ShowTime() {
   };
 
   useEffect(() => {
-    fetch("http://localhost:3001/movies")
-      .then((response) => response.json())
-      .then((data) => {
-        setMovie(data);
-        const initialDates = {};
-        data.forEach((movie) => {
-          if (movie.showtimes?.length > 0) {
-            // Get the earliest date that has at least one valid (not passed) showtime
-            const validShowtimes = movie.showtimes.filter(
-              (st) => !isShowtimePassed(st)
-            );
-            if (validShowtimes.length > 0) {
-              const minDate = validShowtimes.map((st) => st.date).sort()[0];
-              initialDates[movie.id] = minDate;
-            }
-          }
-        });
-        setSelectedDates(initialDates);
-      })
-      .catch((error) => console.error("Error fetching movies:", error));
-
-    fetch("http://localhost:3001/genres")
-      .then((response) => response.json())
-      .then((data) => setGenres(data))
-      .catch((error) => console.error("Error fetching genres:", error));
-
-    fetch("http://localhost:3001/languages")
-      .then((response) => response.json())
-      .then((data) => setLanguages(data))
-      .catch((error) => console.error("Error fetching languages:", error));
-
-    fetch(`http://localhost:3001/cinema/1`)
-      .then((response) => response.json())
-      .then((data) => setCinema(data))
-      .catch((error) => console.error("Error fetching showtimes:", error));
+    const fakeData = [{
+      id: "M1",
+      title: "Phim Dummy Showtimes",
+      poster: "https://via.placeholder.com/200x300",
+      genre_ids: [1],
+      duration: 120,
+      language_id: 1,
+      showtimes: [
+        { id: "S1", date: "2026-05-15", start_time: "10:00:00", end_time: "12:00:00", price: 50000 },
+        { id: "S2", date: "2026-05-16", start_time: "14:00:00", end_time: "16:00:00", price: 55000 }
+      ]
+    }];
+    
+    setMovie(fakeData);
+    const initialDates = {};
+    fakeData.forEach((m) => {
+        if (m.showtimes?.length > 0) {
+        const validShowtimes = m.showtimes.filter((st) => !isShowtimePassed(st));
+        if (validShowtimes.length > 0) {
+            const minDate = validShowtimes.map((st) => st.date).sort()[0];
+            initialDates[m.id] = minDate;
+        }
+        }
+    });
+    setSelectedDates(initialDates);
+    
+    setGenres([{ id: 1, name: "Hành Động" }]);
+    setLanguages([{ id: 1, name: "Tiếng Việt" }]);
+    setCinema({ name: "Cinema Dummy 1" });
   }, []);
 
   const getUniqueDates = (showtimes) => {

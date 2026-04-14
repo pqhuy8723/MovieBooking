@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Table, Button, Form, Modal, Container, Alert } from "react-bootstrap";
-import { fetchData, postData, updateData, deleteData } from "../API/ApiService";
+// Removed API service imports
 import "../../CSS/AdminPages.css";
 
 const GenresManager = () => {
@@ -16,12 +16,7 @@ const GenresManager = () => {
   const [validationError, setValidationError] = useState("");
 
   const fetchGenres = async () => {
-    try {
-      const data = await fetchData("genres");
-      setGenres(data);
-    } catch (error) {
-      console.error("Không thể lấy dữ liệu thể loại:", error);
-    }
+    setGenres([{id: 1, name: "Hành Động", status: "active"}, {id: 2, name: "Hài hước", status: "active"}]);
   };
 
   const validateGenre = (name) => {
@@ -40,8 +35,8 @@ const GenresManager = () => {
       return;
     }
 
-    try {
-      const added = await postData("genres", { name: newGenre, status: newStatus });
+    setTimeout(() => {
+      const added = { id: Date.now(), name: newGenre, status: newStatus };
       setGenres((prev) => [...prev, added]);
       setNewGenre("");
       setNewStatus("active");
@@ -49,12 +44,7 @@ const GenresManager = () => {
       setValidationError("");
       setSuccess("Thêm thể loại thành công!");
       setError(null);
-    } catch (error) {
-      console.error("Không thể thêm thể loại:", error);
-      setValidationError("Không thể thêm thể loại. Vui lòng thử lại!");
-      setError("Không thể thêm thể loại!");
-      setSuccess(null);
-    }
+    }, 300);
   };
 
   const editGenre = async () => {
@@ -68,12 +58,12 @@ const GenresManager = () => {
       return;
     }
 
-    try {
-      const updated = await updateData("genres", currentGenre.id, {
+    setTimeout(() => {
+      const updated = {
         id: currentGenre.id,
         name: currentGenre.name,
         status: currentGenre.status,
-      });
+      };
       setGenres((prev) =>
         prev.map((genre) => (genre.id === updated.id ? updated : genre))
       );
@@ -81,46 +71,31 @@ const GenresManager = () => {
       setShowModal(false);
       setValidationError("");
       setSuccess("Cập nhật thể loại thành công!");
-    } catch (error) {
-      console.error("Không thể cập nhật thể loại:", error);
-      setValidationError("Không thể cập nhật thể loại. Vui lòng thử lại!");
-      setError("Không thể cập nhật thể loại!");
-      setSuccess(null);
-    }
+    }, 300);
   };
 
   const toggleStatus = async (genre) => {
     const updatedStatus = genre.status === "active" ? "inactive" : "active";
-    try {
-      const updated = await updateData("genres", genre.id, {
+    setTimeout(() => {
+      const updated = {
         ...genre,
         status: updatedStatus,
-      });
+      };
       setGenres((prev) =>
         prev.map((item) => (item.id === updated.id ? updated : item))
       );
       setSuccess("Cập nhật trạng thái thể loại thành công!");
       setError(null);
-    } catch (error) {
-      console.error("Không thể thay đổi trạng thái thể loại:", error);
-      setError("Không thể thay đổi trạng thái thể loại. Vui lòng thử lại!");
-      setSuccess(null);
-    }
+    }, 300);
   };
 
   const deleteGenre = async () => {
-    try {
-      await deleteData("genres", deleteGenreId);
+    setTimeout(() => {
       setGenres((prev) => prev.filter((genre) => genre.id !== deleteGenreId));
       setSuccess("Xóa thể loại thành công!");
       setError(null);
       setShowDeleteModal(false);
-    } catch (error) {
-      console.error("Không thể xóa thể loại:", error);
-      setError("Không thể xóa thể loại. Vui lòng thử lại!");
-      setSuccess(null);
-      setShowDeleteModal(false);
-    }
+    }, 300);
   };
 
   const handleCancel = () => {

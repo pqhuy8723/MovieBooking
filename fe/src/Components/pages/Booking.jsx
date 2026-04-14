@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
-import { fetchData } from "../API/ApiService";
+// Removed API service imports
 import { MdChair } from "react-icons/md";
 import { Modal, Button } from "react-bootstrap";
 import "../../CSS/Booking.css";
@@ -49,175 +49,24 @@ function Booking() {
 
   // Helper function to update reserved seats
   const updateReservedSeats = async () => {
-    if (!movieData?.selectedShowtime || !cinemas.length) return;
-    
-    try {
-      const accountData = await fetchData("accounts");
-      const formatTimeForFilter = (timeString) => {
-        if (!timeString) return "";
-        const [hours, minutes] = timeString.split(":").map(Number);
-        return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
-      };
-
-      const formatDateForFilter = (dateString) => {
-        if (!dateString) return "N/A";
-        const date = new Date(dateString);
-        const day = String(date.getDate()).padStart(2, "0");
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const year = date.getFullYear();
-        return `${day}-${month}-${year}`;
-      };
-
-      const getCinemaNameForFilter = (cinemaId) => {
-        return cinemas.find((cinema) => cinema.id === cinemaId)?.name || "Unknown Cinema";
-      };
-
-      const reservedSeats = accountData
-        .flatMap(account => account.tickets || [])
-        .filter(ticket =>
-          ticket.status === "active" && // Chỉ lấy ghế đã thanh toán
-          ticket.movie === movieData.title &&
-          ticket.cinema === getCinemaNameForFilter(movieData.selectedShowtime.cinema_id) &&
-          ticket.date === formatDateForFilter(movieData.selectedShowtime.date) &&
-          ticket.startTime === formatTimeForFilter(movieData.selectedShowtime.start_time)
-        )
-        .flatMap(ticket => ticket.seats || []);
-
-      setReservedSeats(reservedSeats);
-    } catch (error) {
-      console.error("Error updating reserved seats:", error);
-    }
+    setReservedSeats(["A1"]); // mock
   };
 
   useEffect(() => {
     const fetchMovieData = async () => {
-      try {
-        const movie = await fetchData(`movies/${movieId}`);
-        const showtime = movie.showtimes.find((s) => s.id === showtimeId);
-        const genreData = await fetchData("genres");
-        const languageData = await fetchData("languages");
-        const cinemaData = await fetchData("cinema");
-        const screenData = await fetchData("screens");
-        const accountData = await fetchData("accounts");
-
-        setMovieData({ ...movie, selectedShowtime: showtime });
-        setGenres(genreData);
-        setScreen(screenData);
-        setLanguages(languageData);
-        setCinemas(cinemaData);
-
-        // Helper functions for filtering
-        const formatTimeForFilter = (timeString) => {
-          if (!timeString) return "";
-          // Xử lý cả format "HH:MM" và "HH:MM:SS"
-          const [hours, minutes] = timeString.split(":").map(Number);
-          // Đảm bảo format luôn là "HH:MM"
-          return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
-        };
-
-        const formatDateForFilter = (dateString) => {
-          if (!dateString) return "N/A";
-          const date = new Date(dateString);
-          const day = String(date.getDate()).padStart(2, "0");
-          const month = String(date.getMonth() + 1).padStart(2, "0");
-          const year = date.getFullYear();
-          return `${day}-${month}-${year}`;
-        };
-
-        const getCinemaNameForFilter = (cinemaId) => {
-          return cinemaData.find((cinema) => cinema.id === cinemaId)?.name || "Unknown Cinema";
-        };
-
-        // Fetch reserved seats for the current movie, showtime, and date
-        // Chỉ lấy tickets đã thanh toán (status === "active")
-        if (showtime && movie && cinemaData.length > 0) {
-        const reservedSeats = accountData
-            .flatMap(account => account.tickets || [])
-          .filter(ticket =>
-              ticket.status === "active" && // Chỉ lấy ghế đã thanh toán
-              ticket.movie === movie.title &&
-              ticket.cinema === getCinemaNameForFilter(showtime.cinema_id) &&
-              ticket.date === formatDateForFilter(showtime.date) &&
-              ticket.startTime === formatTimeForFilter(showtime.start_time)
-          )
-            .flatMap(ticket => ticket.seats || []);
-
-        setReservedSeats(reservedSeats);
-
-          // Fetch locked seats
-          const lockParams = new URLSearchParams({
-            movie: movie.title,
-            cinema: getCinemaNameForFilter(showtime.cinema_id),
-            date: formatDateForFilter(showtime.date),
-            startTime: formatTimeForFilter(showtime.start_time),
-          });
-
-          try {
-            const lockResponse = await fetch(`http://localhost:5000/api/locked-seats?${lockParams}`);
-            if (lockResponse.ok) {
-              const lockData = await lockResponse.json();
-              setLockedSeats(lockData.lockedSeats || []);
-            }
-          } catch (error) {
-            console.error("Error fetching locked seats:", error);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching movie data:", error);
-      }
+      setMovieData({
+        id: "M1", title: "Phim Dummy Booking", duration: 120, poster: "https://via.placeholder.com/200x300", language_id: 1, genre_ids: [1],
+        selectedShowtime: { id: showtimeId, date: "2026-05-15", start_time: "10:00", end_time: "12:00", price: 50000, cinema_id: 1, screen_id: 1 }
+      });
+      setGenres([{ id: 1, name: "Hành Động" }]);
+      setScreen([{ id: 1, name: "Phòng chiếu 1" }]);
+      setLanguages([{ id: 1, name: "Tiếng Việt" }]);
+      setCinemas([{ id: 1, name: "Cinema Dummy 1" }]);
+      setReservedSeats(["A1"]);
+      setLockedSeats([]);
     };
-
     fetchMovieData();
-
-    // Polling để cập nhật locked seats mỗi 5 giây
-    if (!movieData?.selectedShowtime || !cinemas.length) return;
-
-    const updateLockedSeats = async () => {
-      try {
-        // Helper functions trong scope của useEffect
-        const getCinemaNameForPolling = (cinemaId) => {
-          return cinemas.find((cinema) => cinema.id === cinemaId)?.name || "Unknown Cinema";
-        };
-
-        const formatTimeForPolling = (timeString) => {
-          if (!timeString) return "N/A";
-          const [hours, minutes] = timeString.split(":").map(Number);
-          if (isNaN(hours) || isNaN(minutes)) return "N/A";
-          const time = new Date();
-          time.setHours(hours, minutes, 0, 0);
-          return time.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false });
-        };
-
-        const formatDateForPolling = (dateString) => {
-          if (!dateString) return "N/A";
-          const date = new Date(dateString);
-          const day = String(date.getDate()).padStart(2, "0");
-          const month = String(date.getMonth() + 1).padStart(2, "0");
-          const year = date.getFullYear();
-          return `${day}-${month}-${year}`;
-        };
-
-        const lockParams = new URLSearchParams({
-          movie: movieData.title,
-          cinema: getCinemaNameForPolling(movieData.selectedShowtime?.cinema_id),
-          date: formatDateForPolling(movieData.selectedShowtime?.date),
-          startTime: formatTimeForPolling(movieData.selectedShowtime?.start_time),
-        });
-
-        const lockResponse = await fetch(`http://localhost:5000/api/locked-seats?${lockParams}`);
-        if (lockResponse.ok) {
-          const lockData = await lockResponse.json();
-          setLockedSeats(lockData.lockedSeats || []);
-        }
-      } catch (error) {
-        console.error("Error fetching locked seats:", error);
-      }
-    };
-
-    updateLockedSeats(); // Gọi ngay lập tức
-    const intervalId = setInterval(updateLockedSeats, 5000); // Cập nhật mỗi 5 giây
-
-    return () => clearInterval(intervalId);
+    // Static mode: No polling
   }, [movieId, showtimeId, movieData?.title, movieData?.selectedShowtime, cinemas]);
 
   const seats = Array.from({ length: 8 }, (_, rowIndex) => {
@@ -266,36 +115,9 @@ function Booking() {
       return;
     }
 
-    // Lock seats trước khi hiển thị modal xác nhận
-    try {
-      const lockData = {
-        userEmail: user.email,
-        movie: movieData.title,
-        cinema: getCinemaName(movieData.selectedShowtime.cinema_id),
-        date: formatDate(movieData.selectedShowtime.date),
-        startTime: formatTime(movieData.selectedShowtime.start_time),
-        seats: selectedSeats,
-      };
-
-      const lockResponse = await fetch("http://localhost:5000/api/lock-seats", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(lockData),
-      });
-
-      if (lockResponse.ok) {
-        // Cập nhật locked seats để hiển thị ngay
-        setLockedSeats((prev) => [...new Set([...prev, ...selectedSeats])]);
-        setShowModal(true);
-    } else {
-        alert("Có lỗi xảy ra khi giữ ghế, vui lòng thử lại.");
-      }
-    } catch (error) {
-      console.error("Error locking seats:", error);
-      alert("Có lỗi xảy ra khi giữ ghế, vui lòng thử lại.");
-    }
+    // Static lock seats
+    setLockedSeats((prev) => [...new Set([...prev, ...selectedSeats])]);
+    setShowModal(true);
   };
 
   const getGenreNames = (genreIds) => {
@@ -342,107 +164,23 @@ function Booking() {
   }
   const handleConfirmBooking = async () => {
     setIsSending(true); // Start sending email
-    try {
-      const bookingData = {
-        userEmail: user?.email,
-        fullName: user?.full_name || "Khách",
-        phone: user?.phone || "Khách",
-        cinema: getCinemaName(movieData.selectedShowtime?.cinema_id),
-        movie: movieData.title,
-        duration: movieData.duration,
-        screen: getScreenName(movieData.selectedShowtime?.screen_id),
-        seats: selectedSeats,  // Đảm bảo seats là mảng
-        date: formatDate(movieData.selectedShowtime?.date),
-        startTime: formatTime(movieData.selectedShowtime?.start_time),
-        endTime: formatTime(movieData.selectedShowtime?.end_time),
-        totalPrice: movieData.selectedShowtime?.price * selectedSeats.length
-      };
-
-      // Nếu chọn thanh toán VNPay
+    setTimeout(() => {
       if (paymentMethod === "vnpay") {
-        const response = await fetch("http://localhost:5000/vnpay/create", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ bookingData }),
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          if (result.paymentUrl) {
-            // Lưu booking code vào sessionStorage
-            sessionStorage.setItem("booking_code", result.booking_code);
-            // Chuyển hướng đến trang thanh toán VNPay
-            window.location.href = result.paymentUrl;
-          } else {
-            alert(result.message || "Không thể tạo liên kết thanh toán.");
-            setIsSending(false);
-          }
-        } else {
-          const errorData = await response.json();
-          alert(errorData.message || "Có lỗi xảy ra, vui lòng thử lại.");
-          setIsSending(false);
-        }
+        alert("VNPay mock: Chuyển hướng...");
+        setIsSending(false);
         return;
       }
-
-      // Thanh toán COD (giữ nguyên logic cũ)
-      const response = await fetch("http://localhost:5000/api/confirm-booking", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(bookingData),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setTicketId(result.ticketId);
-        setShowSuccessModal(true);
-        setShowModal(false);
-        
-        // Unlock seats sau khi thanh toán thành công
-        try {
-          await fetch("http://localhost:5000/api/unlock-seats", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              userEmail: user?.email,
-              movie: movieData.title,
-              cinema: getCinemaName(movieData.selectedShowtime?.cinema_id),
-              date: formatDate(movieData.selectedShowtime?.date),
-              startTime: formatTime(movieData.selectedShowtime?.start_time),
-            }),
-          });
-        } catch (error) {
-          console.error("Error unlocking seats:", error);
-        }
-        
-        // Lưu selectedSeats trước khi xóa
-        const bookedSeats = [...selectedSeats];
-        setSelectedSeats([]);
-        // Xóa locked seats khỏi state
-        setLockedSeats((prev) => prev.filter(seat => !bookedSeats.includes(seat)));
-        
-        // Thêm ghế vừa đặt vào reservedSeats ngay lập tức
-        setReservedSeats((prev) => [...new Set([...prev, ...bookedSeats])]);
-        
-        // Reload reserved seats sau khi đặt vé thành công (với delay nhỏ để đảm bảo database đã được cập nhật)
-        setTimeout(async () => {
-          await updateReservedSeats();
-        }, 500);
-      } else {
-        alert("Có lỗi xảy ra, vui lòng thử lại.");
-      }
-    } catch (error) {
-      console.error("Error confirming booking:", error);
-      alert("Có lỗi xảy ra khi xác nhận vé.");
-    } finally {
+      setTicketId("T" + Date.now());
+      setShowSuccessModal(true);
+      setShowModal(false);
+      
+      const bookedSeats = [...selectedSeats];
+      setSelectedSeats([]);
+      setLockedSeats((prev) => prev.filter(seat => !bookedSeats.includes(seat)));
+      setReservedSeats((prev) => [...new Set([...prev, ...bookedSeats])]);
+      
       setIsSending(false);
-    }
+    }, 500);
   };
 
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Table, Button, Form, Modal, Container, Alert } from "react-bootstrap";
-import { fetchData, postData, updateData, deleteData } from "../API/ApiService";
+// Removed API imports
 import "../../CSS/AdminPages.css";
 
 const MovieTypesManager = () => {
@@ -16,12 +16,7 @@ const MovieTypesManager = () => {
   const [validationError, setValidationError] = useState("");
 
   const fetchMovieTypes = async () => {
-    try {
-      const data = await fetchData("movietypes");
-      setMovieTypes(data);
-    } catch (error) {
-      console.error("Không thể lấy danh sách loại phim:", error);
-    }
+    setMovieTypes([{id: 1, name: "Phim Đang Chiếu", status: "active"}, {id: 2, name: "Phim Sắp Chiếu", status: "active"}]);
   };
 
   const validateMovieType = (name) => {
@@ -40,11 +35,12 @@ const MovieTypesManager = () => {
       return;
     }
 
-    try {
-      const added = await postData("movietypes", {
+    setTimeout(() => {
+      const added = {
+        id: Date.now(),
         name: newMovieType,
         status: newStatus,
-      });
+      };
       setMovieTypes((prev) => [...prev, added]);
       setNewMovieType("");
       setNewStatus("active");
@@ -52,12 +48,7 @@ const MovieTypesManager = () => {
       setValidationError("");
       setSuccess("Thêm loại phim thành công!");
       setError(null);
-    } catch (error) {
-      console.error("Không thể thêm loại phim:", error);
-      setValidationError("Không thể thêm loại phim. Vui lòng thử lại!");
-      setError("Không thể thêm loại phim!");
-      setSuccess(null);
-    }
+    }, 300);
   };
 
   const editMovieType = async () => {
@@ -71,12 +62,12 @@ const MovieTypesManager = () => {
       return;
     }
 
-    try {
-      const updated = await updateData("movietypes", currentMovieType.id, {
+    setTimeout(() => {
+      const updated = {
         id: currentMovieType.id,
         name: currentMovieType.name,
         status: currentMovieType.status,
-      });
+      };
       setMovieTypes((prev) =>
         prev.map((type) => (type.id === updated.id ? updated : type))
       );
@@ -84,46 +75,31 @@ const MovieTypesManager = () => {
       setShowModal(false);
       setValidationError("");
       setSuccess("Cập nhật loại phim thành công!");
-    } catch (error) {
-      console.error("Không thể cập nhật loại phim:", error);
-      setValidationError("Không thể cập nhật loại phim. Vui lòng thử lại!");
-      setError("Không thể cập nhật loại phim!");
-      setSuccess(null);
-    }
+    }, 300);
   };
 
   const toggleStatus = async (movieType) => {
     const updatedStatus = movieType.status === "active" ? "inactive" : "active";
-    try {
-      const updated = await updateData("movietypes", movieType.id, {
+    setTimeout(() => {
+      const updated = {
         ...movieType,
         status: updatedStatus,
-      });
+      };
       setMovieTypes((prev) =>
         prev.map((item) => (item.id === updated.id ? updated : item))
       );
       setSuccess("Cập nhật trạng thái loại phim thành công!");
       setError(null);
-    } catch (error) {
-      console.error("Không thể thay đổi trạng thái loại phim:", error);
-      setError("Không thể thay đổi trạng thái loại phim. Vui lòng thử lại!");
-      setSuccess(null);
-    }
+    }, 300);
   };
 
   const deleteMovieType = async () => {
-    try {
-      await deleteData("movietypes", deleteMovieTypeId);
+    setTimeout(() => {
       setMovieTypes((prev) => prev.filter((type) => type.id !== deleteMovieTypeId));
       setSuccess("Xóa loại phim thành công!");
       setError(null);
       setShowDeleteModal(false);
-    } catch (error) {
-      console.error("Không thể xóa loại phim:", error);
-      setError("Không thể xóa loại phim. Vui lòng thử lại!");
-      setSuccess(null);
-      setShowDeleteModal(false);
-    }
+    }, 300);
   };
 
   const handleCancel = () => {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Table, Button, Form, Modal, Container, Alert } from "react-bootstrap";
-import { fetchData, postData, updateData, deleteData } from "../API/ApiService";
+// Removed API service imports
 import "../../CSS/AdminPages.css";
 
 const AccountManager = () => {
@@ -30,12 +30,10 @@ const AccountManager = () => {
   }
 
   const fetchAccounts = async () => {
-    try {
-      const data = await fetchData("accounts");
-      setAccounts(data);
-    } catch {
-      setErrorMessage("Không thể tải danh sách tài khoản!");
-    }
+    setAccounts([{
+      id: 1, full_name: "Admin Dummy", email: "admin@dummy.com", phone: "0123456789", 
+      dob: "2000-01-01", gender: "Nam", address: "Dummy City", role: "1", status: "active"
+    }]);
   };
 
   const validateFields = () => {
@@ -91,72 +89,47 @@ const AccountManager = () => {
   const handleSave = async () => {
     if (!validateFields()) return;
 
-    try {
+    setTimeout(() => {
       let updatedAccount;
 
       if (currentAccount) {
-        updatedAccount = await updateData("accounts", currentAccount.id, newAccount);
+        updatedAccount = { ...newAccount, id: currentAccount.id };
         setAccounts((prev) =>
           prev.map((account) => (account.id === updatedAccount.id ? updatedAccount : account))
         );
       } else {
-        updatedAccount = await postData("accounts", newAccount);
+        updatedAccount = { ...newAccount, id: Date.now() };
         setAccounts((prev) => [...prev, updatedAccount]);
-      }
-      const accountToSave = {
-        id: updatedAccount.id,
-        password: updatedAccount.password,
-        role: updatedAccount.role,
-        email: updatedAccount.email,
-        phone: updatedAccount.phone,
-        full_name: updatedAccount.full_name,
-      };
-      const sessionAccount = JSON.parse(sessionStorage.getItem("account"));
-      if (sessionAccount && sessionAccount.id === updatedAccount.id) {
-        sessionStorage.setItem("account", JSON.stringify(updatedAccount));
-      }
-
-      const localAccount = JSON.parse(localStorage.getItem("rememberedAccount"));
-      if (localAccount && localAccount.id === updatedAccount.id) {
-        localStorage.setItem("rememberedAccount", JSON.stringify(accountToSave));
       }
 
       setSuccessMessage("Cập nhật tài khoản thành công!");
       setShowModal(false);
       setNewAccount(initialAccountState());
       setErrors({});
-    } catch {
-      setErrorMessage("Có lỗi xảy ra trong quá trình lưu, vui lòng thử lại!");
-    }
+    }, 300);
   };
 
   const handleDelete = async () => {
     if (!accountToDelete) return;
-
-    try {
-      await deleteData("accounts", accountToDelete.id);
+    setTimeout(() => {
       setAccounts((prev) => prev.filter((acc) => acc.id !== accountToDelete.id));
       setSuccessMessage("Xóa tài khoản thành công!");
       setShowDeleteModal(false);
-    } catch {
-      setErrorMessage("Không thể xóa tài khoản, vui lòng thử lại!");
-    }
+    }, 300);
   };
 
   const toggleStatus = async (id) => {
-    try {
+    setTimeout(() => {
       const account = accounts.find((acc) => acc.id === id);
-      const updated = await updateData("accounts", id, {
+      const updated = {
         ...account,
         status: account.status === "active" ? "inactive" : "active",
-      });
+      };
       setAccounts((prev) =>
         prev.map((acc) => (acc.id === updated.id ? updated : acc))
       );
       setSuccessMessage("Cập nhật trạng thái tài khoản thành công!");
-    } catch {
-      setErrorMessage("Không thể cập nhật trạng thái tài khoản, vui lòng thử lại!");
-    }
+    }, 300);
   };
 
   useEffect(() => {

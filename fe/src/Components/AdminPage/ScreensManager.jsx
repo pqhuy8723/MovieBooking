@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Table, Button, Form, Modal, Container, Alert } from "react-bootstrap";
-import { fetchData, postData, updateData, deleteData } from "../API/ApiService";
+// Removed API imports
 import "../../CSS/AdminPages.css";
 
 const ScreensManager = () => {
@@ -16,12 +16,7 @@ const ScreensManager = () => {
   const [validationError, setValidationError] = useState("");
 
   const fetchScreens = async () => {
-    try {
-      const data = await fetchData("screens");
-      setScreens(data);
-    } catch (error) {
-      console.error("Không thể lấy danh sách màn hình:", error);
-    }
+    setScreens([{id: 1, name: "Phòng chiếu 1", status: "active"}, {id: 2, name: "Phòng chiếu 2", status: "active"}]);
   };
 
   const validateScreen = (name) => {
@@ -40,8 +35,8 @@ const ScreensManager = () => {
       return;
     }
 
-    try {
-      const added = await postData("screens", { name: newScreen, status: newStatus });
+    setTimeout(() => {
+      const added = { name: newScreen, status: newStatus, id: Date.now() };
       setScreens((prev) => [...prev, added]);
       setNewScreen("");
       setNewStatus("active");
@@ -49,12 +44,7 @@ const ScreensManager = () => {
       setValidationError("");
       setSuccess("Thêm màn hình thành công!");
       setError(null);
-    } catch (error) {
-      console.error("Không thể thêm màn hình:", error);
-      setValidationError("Không thể thêm màn hình. Vui lòng thử lại!");
-      setError("Không thể thêm màn hình!");
-      setSuccess(null);
-    }
+    }, 300);
   };
 
   const editScreen = async () => {
@@ -68,12 +58,12 @@ const ScreensManager = () => {
       return;
     }
 
-    try {
-      const updated = await updateData("screens", currentScreen.id, {
+    setTimeout(() => {
+      const updated = {
         id: currentScreen.id,
         name: currentScreen.name,
         status: currentScreen.status,
-      });
+      };
       setScreens((prev) =>
         prev.map((screen) => (screen.id === updated.id ? updated : screen))
       );
@@ -81,46 +71,31 @@ const ScreensManager = () => {
       setShowAddEditModal(false);
       setValidationError("");
       setSuccess("Cập nhật màn hình thành công!");
-    } catch (error) {
-      console.error("Không thể cập nhật màn hình:", error);
-      setValidationError("Không thể cập nhật màn hình. Vui lòng thử lại!");
-      setError("Không thể cập nhật màn hình!");
-      setSuccess(null);
-    }
+    }, 300);
   };
 
   const toggleStatus = async (screen) => {
     const updatedStatus = screen.status === "active" ? "inactive" : "active";
-    try {
-      const updated = await updateData("screens", screen.id, {
+    setTimeout(() => {
+      const updated = {
         ...screen,
         status: updatedStatus,
-      });
+      };
       setScreens((prev) =>
         prev.map((item) => (item.id === updated.id ? updated : item))
       );
       setSuccess("Cập nhật trạng thái màn hình thành công!");
       setError(null);
-    } catch (error) {
-      console.error("Không thể thay đổi trạng thái:", error);
-      setError("Không thể thay đổi trạng thái màn hình. Vui lòng thử lại!");
-      setSuccess(null);
-    }
+    }, 300);
   };
 
   const deleteScreen = async () => {
-    try {
-      await deleteData("screens", deleteScreenId);
+    setTimeout(() => {
       setScreens((prev) => prev.filter((screen) => screen.id !== deleteScreenId));
       setSuccess("Xóa màn hình thành công!");
       setError(null);
       setShowDeleteModal(false);
-    } catch (error) {
-      console.error("Không thể xóa màn hình:", error);
-      setError("Không thể xóa màn hình. Vui lòng thử lại!");
-      setSuccess(null);
-      setShowDeleteModal(false);
-    }
+    }, 300);
   };
 
   const handleCancel = () => {

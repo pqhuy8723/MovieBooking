@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Table, Button, Form, Modal, Container, Alert } from "react-bootstrap";
-import { fetchData, postData, updateData, deleteData } from "../API/ApiService";
+// Removed API hooks
 import "../../CSS/LanguagesManager.css";
 import "../../CSS/AdminPages.css";
 
@@ -17,12 +17,7 @@ const LanguagesManager = () => {
   const [validationError, setValidationError] = useState("");
 
   const fetchLanguages = async () => {
-    try {
-      const data = await fetchData("languages");
-      setLanguages(data);
-    } catch (error) {
-      console.error("Không thể lấy dữ liệu ngôn ngữ:", error);
-    }
+    setLanguages([{id: 1, name: "Tiếng Việt", status: "active"}]);
   };
 
   const validateLanguage = (name) => {
@@ -41,11 +36,12 @@ const LanguagesManager = () => {
       return;
     }
 
-    try {
-      const added = await postData("languages", {
+    setTimeout(() => {
+      const added = {
+        id: Date.now(),
         name: newLanguage,
         status: newStatus,
-      });
+      };
       setLanguages((prev) => [...prev, added]);
       setNewLanguage("");
       setNewStatus("active");
@@ -53,12 +49,7 @@ const LanguagesManager = () => {
       setValidationError("");
       setSuccess("Thêm ngôn ngữ thành công!");
       setError(null);
-    } catch (error) {
-      console.error("Không thể thêm ngôn ngữ:", error);
-      setValidationError("Không thể thêm ngôn ngữ. Vui lòng thử lại!");
-      setError("Không thể thêm ngôn ngữ!");
-      setSuccess(null);
-    }
+    }, 300);
   };
 
   const editLanguage = async () => {
@@ -72,12 +63,12 @@ const LanguagesManager = () => {
       return;
     }
 
-    try {
-      const updated = await updateData("languages", currentLanguage.id, {
+    setTimeout(() => {
+      const updated = {
         id: currentLanguage.id,
         name: currentLanguage.name,
         status: currentLanguage.status,
-      });
+      };
       setLanguages((prev) =>
         prev.map((lang) => (lang.id === updated.id ? updated : lang))
       );
@@ -85,46 +76,31 @@ const LanguagesManager = () => {
       setShowModal(false);
       setValidationError("");
       setSuccess("Cập nhật ngôn ngữ thành công!");
-    } catch (error) {
-      console.error("Không thể cập nhật ngôn ngữ:", error);
-      setValidationError("Không thể cập nhật ngôn ngữ. Vui lòng thử lại!");
-      setError("Không thể cập nhật ngôn ngữ!");
-      setSuccess(null);
-    }
+    }, 300);
   };
 
   const toggleStatus = async (lang) => {
     const updatedStatus = lang.status === "active" ? "inactive" : "active";
-    try {
-      const updated = await updateData("languages", lang.id, {
+    setTimeout(() => {
+      const updated = {
         ...lang,
         status: updatedStatus,
-      });
+      };
       setLanguages((prev) =>
         prev.map((item) => (item.id === updated.id ? updated : item))
       );
       setSuccess("Cập nhật trạng thái ngôn ngữ thành công!");
       setError(null);
-    } catch (error) {
-      console.error("Không thể thay đổi trạng thái:", error);
-      setError("Không thể thay đổi trạng thái ngôn ngữ. Vui lòng thử lại!");
-      setSuccess(null);
-    }
+    }, 300);
   };
 
   const deleteLanguage = async () => {
-    try {
-      await deleteData("languages", deleteLanguageId);
+    setTimeout(() => {
       setLanguages((prev) => prev.filter((lang) => lang.id !== deleteLanguageId));
       setSuccess("Xóa ngôn ngữ thành công!");
       setError(null);
       setShowDeleteModal(false);
-    } catch (error) {
-      console.error("Không thể xóa ngôn ngữ:", error);
-      setError("Không thể xóa ngôn ngữ. Vui lòng thử lại!");
-      setSuccess(null);
-      setShowDeleteModal(false);
-    }
+    }, 300);
   };
 
   const handleCancel = () => {

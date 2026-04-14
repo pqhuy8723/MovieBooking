@@ -28,25 +28,26 @@ const MovieDetail = () => {
   };
 
   useEffect(() => {
-    fetch(`http://localhost:3001/movies/${id}`)
-      .then((response) => response.json())
-      .then((data) => setMovie(data))
-      .catch((error) => console.error("Error fetching movie:", error));
-
-    fetch("http://localhost:3001/genres")
-      .then((response) => response.json())
-      .then((data) => setGenres(data))
-      .catch((error) => console.error("Error fetching genres:", error));
-
-    fetch("http://localhost:3001/languages")
-      .then((response) => response.json())
-      .then((data) => setLanguages(data))
-      .catch((error) => console.error("Error fetching languages:", error));
-
-    fetch(`http://localhost:3001/cinema/1`)
-      .then((response) => response.json())
-      .then((data) => setCinema(data))
-      .catch((error) => console.error("Error fetching showtimes:", error));
+    setMovie({
+      id: "M1",
+      title: "Phim Dummy Detail",
+      description: "Mo ta chi tiet phim dummy",
+      director: "Director Dummy",
+      actor: "Actor A, Actor B",
+      genre_ids: [1],
+      duration: 120,
+      language_id: 1,
+      release_date: "2026-05-01",
+      poster: "https://via.placeholder.com/200x300",
+      video_url: "https://www.youtube.com/embed/tgbNymZ7vqY",
+      showtimes: [
+        { id: "S1", date: "2026-05-15", start_time: "10:00:00", end_time: "12:00:00", price: 50000 },
+        { id: "S2", date: "2026-05-15", start_time: "14:00:00", end_time: "16:00:00", price: 55000 }
+      ]
+    });
+    setGenres([{ id: 1, name: "Hành Động" }]);
+    setLanguages([{ id: 1, name: "Tiếng Việt" }]);
+    setCinema({ name: "Cinema Dummy 1" });
   }, [id]);
 
   // Helper function to check if showtime has passed

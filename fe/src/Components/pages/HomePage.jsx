@@ -17,55 +17,16 @@ function HomePage() {
   const [selectedMovie, setSelectedMovie] = useState(null);
 
   useEffect(() => {
-    const fetchMovies = async () => {
-      try {
-        const response = await fetch("http://localhost:3001/movies");
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const moviesData = await response.json();
-        setData(Array.isArray(moviesData) ? moviesData : []);
-      } catch (error) {
-        console.error("Error fetching movies:", error);
-        setData([]);
-      }
-    };
-
-    const fetchGenres = async () => {
-      try {
-        const response = await fetch("http://localhost:3001/genres");
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const genresData = await response.json();
-        setGenres(Array.isArray(genresData) ? genresData : []);
-      } catch (error) {
-        console.error("Error fetching genres:", error);
-        setGenres([]);
-      }
-    };
-
-    const fetchMovieTypes = async () => {
-      try {
-        const response = await fetch("http://localhost:3001/movietypes");
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const typesData = await response.json();
-        setMovieType(Array.isArray(typesData) ? typesData : []);
-        // Set default selectedMovieType to first movie type if available
-        if (Array.isArray(typesData) && typesData.length > 0) {
-          setSelectedMovieType(typesData[0].id);
-        }
-      } catch (error) {
-        console.error("Error fetching movie types:", error);
-        setMovieType([]);
-      }
-    };
-
-    fetchMovies();
-    fetchGenres();
-    fetchMovieTypes();
+    setData([{
+      id: 1, title: "Phim Dummy 1", 
+      banner: "https://via.placeholder.com/1200x500", 
+      poster: "https://via.placeholder.com/200x300",
+      movie_type: 1, genre_ids: [1], duration: 120, release_date: "2026-05-01",
+      video_url: "https://www.youtube.com/embed/tgbNymZ7vqY"
+    }]);
+    setGenres([{ id: 1, name: "Hành Động" }]);
+    setMovieType([{ id: 1, name: "Phim Đang Chiếu" }]);
+    setSelectedMovieType(1);
   }, []);
 
   const handleMovieTypeFilter = (type) => {

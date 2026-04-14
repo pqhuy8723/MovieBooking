@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, InputGroup, FormControl } from 'react-bootstrap';
-import { fetchData, updateData } from '../API/ApiService';
+// Removed API service imports
 
 const TicketManagement = () => {
   const [accounts, setAccounts] = useState([]);
@@ -9,12 +9,11 @@ const TicketManagement = () => {
 
   useEffect(() => {
     const loadAccounts = async () => {
-      try {
-        const data = await fetchData('accounts');
-        setAccounts(data);
-      } catch (error) {
-        console.error('Lỗi khi lấy dữ liệu tài khoản:', error);
-      }
+      setAccounts([{
+        id: 1, full_name: "Dummy User", email: "dummy@gmail.com", phone: "0123456789", tickets: [
+          {id: "T1", movie: "Dummy Phim", cinema: "Cinema Dummy", seats: ["A1"], date: "2026-05-15", startTime: "10:00", endTime: "12:00", totalPrice: 50000, status: "active"}
+        ]
+      }]);
     };
     loadAccounts();
   }, []);
@@ -35,14 +34,7 @@ const TicketManagement = () => {
 
 
   const togglePaymentStatus = async (accountId, ticketId, status) => {
-    try {
-      await updateData('accounts', accountId, { 
-        tickets: accounts.find(account => account.id === accountId).tickets.map(ticket => 
-          ticket.id === ticketId ? { ...ticket, status: status === 'active' ? 'inactive' : 'active' } : ticket
-        )
-      });
-      
-    
+    setTimeout(() => {
       setAccounts(accounts.map(account => 
         account.id === accountId 
           ? { ...account, tickets: account.tickets.map(ticket => 
@@ -50,9 +42,7 @@ const TicketManagement = () => {
             ) } 
           : account
       ));
-    } catch (error) {
-      console.error('Lỗi khi thay đổi trạng thái thanh toán:', error);
-    }
+    }, 300);
   };
 
 

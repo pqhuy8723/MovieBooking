@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Container, Row, Col, Form, Button, Modal, Table } from "react-bootstrap";
-import { fetchData, updateData } from "../API/ApiService";
+// Removed API service imports
 import { Lock } from 'react-bootstrap-icons';
 import { InputGroup, FormControl } from 'react-bootstrap';
 
@@ -28,27 +28,28 @@ function UserProfile() {
     confirmPassword: "",
   });
   useEffect(() => {
-    const getUserData = async () => {
-      try {
-        setLoading(true);
-        const data = await fetchData(`accounts/${id}`);
-        setUserData(data);
+    const getUserData = () => {
+      setLoading(true);
+      setTimeout(() => {
+        const fakeData = {
+          full_name: "User Dummy", email: "dummy@gmail.com", phone: "0123456789", 
+          dob: "2000-01-01", address: "Hanoi", gender: "Nam",
+          tickets: [
+            { id: "T1", movie: "Dummy Phim", cinema: "Cinema Dummy", seats: ["A1"], date: "2026-05-15", startTime: "10:00", endTime: "12:00", totalPrice: 50000, status: "active" }
+          ]
+        };
+        setUserData(fakeData);
         setFormData({
-          full_name: data.full_name,
-          email: data.email,
-          phone: data.phone,
-          dob: data.dob,
-          address: data.address,
-          gender: data.gender,
+          full_name: fakeData.full_name,
+          email: fakeData.email,
+          phone: fakeData.phone,
+          dob: fakeData.dob,
+          address: fakeData.address,
+          gender: fakeData.gender,
         });
-
-        const userTickets = data.tickets || [];
-        setAccounts(userTickets);
-      } catch (error) {
-        console.error("Failed to fetch user data:", error);
-      } finally {
+        setAccounts(fakeData.tickets);
         setLoading(false);
-      }
+      }, 500);
     };
 
     getUserData();
@@ -169,68 +170,51 @@ function UserProfile() {
     return Object.keys(validationErrors).length === 0;
   };
 
-  const getUserData = async () => {
-    try {
-      setLoading(true);
-      const data = await fetchData(`accounts/${id}`);
-      setUserData(data);
+  const getUserData = () => {
+    setLoading(true);
+    setTimeout(() => {
+       const fakeData = {
+          full_name: "User Dummy", email: "dummy@gmail.com", phone: "0123456789", 
+          dob: "2000-01-01", address: "Hanoi", gender: "Nam",
+          tickets: [
+            { id: "T1", movie: "Dummy Phim", cinema: "Cinema Dummy", seats: ["A1"], date: "2026-05-15", startTime: "10:00", endTime: "12:00", totalPrice: 50000, status: "active" }
+          ]
+        };
+      setUserData(fakeData);
       setFormData({
-        full_name: data.full_name,
-        email: data.email,
-        phone: data.phone,
-        dob: data.dob,
-        address: data.address,
-        gender: data.gender,
+        full_name: fakeData.full_name,
+        email: fakeData.email,
+        phone: fakeData.phone,
+        dob: fakeData.dob,
+        address: fakeData.address,
+        gender: fakeData.gender,
       });
-    } catch (error) {
-      console.error("Failed to fetch user data:", error);
-    } finally {
       setLoading(false);
-    }
+    }, 500);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (!validateFields()) return;
     setUpdating(true);
-    try {
-      const updatedData = {
-        ...userData,
-        ...formData,
-      };
-      await updateData("accounts", id, updatedData);
+    setTimeout(() => {
       setSuccessMessage("Cập nhật thành công!");
       setShowSuccessModal(true);
-      await getUserData();
-    } catch (error) {
-      console.error("Failed to update profile:", error);
-      setSuccessMessage("Có lỗi xảy ra, vui lòng thử lại.");
-      setShowSuccessModal(true);
-    } finally {
+      getUserData();
       setUpdating(false);
-    }
+    }, 500);
   };
 
-  const handlePasswordSubmit = async (e) => {
+  const handlePasswordSubmit = (e) => {
     e.preventDefault();
     if (!validatePasswordFields()) return;
     setUpdating(true);
-    try {
-      const updatedData = {
-        ...userData,
-        password: passwordData.newPassword,
-      };
-      await updateData("accounts", id, updatedData);
+    setTimeout(() => {
       setSuccessMessage("Đổi mật khẩu thành công!");
       setShowSuccessModal(true);
       handleClose();
-    } catch (error) {
-      console.error("Failed to update password:", error);
-      setSuccessMessage("Có lỗi xảy ra khi cập nhật mật khẩu.");
-      setShowSuccessModal(true);
-    } finally {
       setUpdating(false);
-    }
+    }, 500);
   };
 
   useEffect(() => {

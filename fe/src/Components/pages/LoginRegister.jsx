@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, Button, Form, InputGroup, Modal } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import { postData, fetchData, postAuthData } from "../API/ApiService";
+// Removed API service imports
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "../../CSS/LoginRegister.css";
 
@@ -46,31 +46,21 @@ const LoginRegister = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    try {
-      const response = await postAuthData("/api/login", { email, password });
-
-      if (response.user) {
-        const user = response.user;
+    setTimeout(() => {
+      // Mock login Check
+      if (email === "admin@gmail.com") {
+        const user = { id: 1, email: "admin@gmail.com", full_name: "Admin", role: "admin" };
         if (remember) {
-          const userData = {
-            id: user.id,
-            email: user.email,
-            full_name: user.full_name,
-            role: user.role
-          };
-          localStorage.setItem("rememberedAccount", JSON.stringify(userData));
+          localStorage.setItem("rememberedAccount", JSON.stringify(user));
         } else {
           localStorage.removeItem("rememberedAccount");
         }
         sessionStorage.setItem("account", JSON.stringify(user));
         window.location.replace("/");
       } else {
-        setErrorMessage(response.message || "Đăng nhập thất bại!");
+        setErrorMessage("Email hoặc mật khẩu không chính xác (Thử admin@gmail.com)");
       }
-    } catch (error) {
-      console.error("Lỗi khi đăng nhập:", error);
-      setErrorMessage("Có lỗi xảy ra, vui lòng thử lại!");
-    }
+    }, 300);
   };
   const validateResetPassword = () => {
     const resetValidationErrors = {};
@@ -107,8 +97,7 @@ const LoginRegister = () => {
     } else if (!emailRegex.test(email)) {
       validationErrors.email = "Email không đúng định dạng!";
     } else {
-      const users = await fetchData("accounts");
-      const emailExists = users.some((user) => user.email === email);
+      const emailExists = email === "admin@gmail.com";
       if (emailExists) validationErrors.email = "Email đã được đăng ký!";
     }
 
@@ -117,8 +106,7 @@ const LoginRegister = () => {
     } else if (!phoneRegex.test(phone)) {
       validationErrors.phone = "Số điện thoại không đúng định dạng!";
     } else {
-      const users = await fetchData("accounts");
-      const phoneExists = users.some((user) => user.phone === phone);
+      const phoneExists = phone === "0123456789";
       if (phoneExists) validationErrors.phone = "Số điện thoại đã được đăng ký!";
     }
 
@@ -151,18 +139,10 @@ const LoginRegister = () => {
     const isValid = await validateFields();
     if (!isValid) return;
 
-    const data = { full_name, email, password, phone, dob, gender, address };
-
-    try {
-      const response = await postAuthData("/api/register", data);
-
+    setTimeout(() => {
       setShowSuccessModal(true);
-
       setCurrentForm("login");
-    } catch (error) {
-      console.error("Registration error:", error);
-      setErrorMessage("An error occurred while registering");
-    }
+    }, 500);
   };
 
   const handleForgotPassword = async (e) => {
@@ -173,58 +153,29 @@ const LoginRegister = () => {
       return;
     }
     setIsSubmitting(true);
-    try {
-      const response = await fetch("http://localhost:5000/api/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
+    setTimeout(() => {
+      setPopupContent({
+        title: "Yêu cầu thành công",
+        message: "Yêu cầu đặt lại mật khẩu đã được gửi.",
       });
-
-      const data = await response.json();
-      if (response.ok) {
-        setPopupContent({
-          title: "Yêu cầu thành công",
-          message: data.message || "Yêu cầu đặt lại mật khẩu đã được gửi.",
-        });
-        setPopupVisible(true);
-        setCurrentForm("resetPassword");
-      } else {
-        setErrorMessage(data.message || "Đã xảy ra lỗi khi gửi yêu cầu!");
-      }
-    } catch (error) {
-      console.error("Error in forgot password:", error);
-      setErrorMessage("Không thể kết nối đến server, vui lòng thử lại.");
-    } finally {
-      setIsSubmitting(false); // Hoàn tất, kích hoạt lại nút
-    }
+      setPopupVisible(true);
+      setCurrentForm("resetPassword");
+      setIsSubmitting(false);
+    }, 500);
   };
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
      const isValid = validateResetPassword();
     if (!isValid) return;
-    try {
-      const response = await fetch("http://localhost:5000/api/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), resetToken, newPassword }),
-      });
-
-      const data = await response.json();
-      if (response.ok) {
+    setTimeout(() => {
         setPopupContent({
           title: "Thay đổi thành công",
-          message: data.message || "Mật khẩu đã được thay đổi.",
+          message: "Mật khẩu đã được thay đổi.",
         });
         setPopupVisible(true);
         setCurrentForm("login");
-      } else {
-        setErrorMessage(data.message || "Đã xảy ra lỗi khi thay đổi mật khẩu!");
-      }
-    } catch (error) {
-      console.error("Error resetting password:", error);
-      setErrorMessage("Không thể kết nối đến server, vui lòng thử lại.");
-    }
+    }, 500);
   };
   const handleCancel = () => {
     setEmail("");

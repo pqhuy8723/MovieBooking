@@ -10,10 +10,10 @@ import {
   Col,
 } from "react-bootstrap";
 import { FaEdit, FaTrashAlt, FaPlus } from "react-icons/fa";
-import { fetchData, postData, updateData, deleteData } from "../API/ApiService";
+// Removed API imports
 import ImageCropModal from "./ImageCropModal";
 import "../../CSS/AdminPages.css";
-const API_BASE = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
+// API base removed
 
 function AdminMovies() {
   const [movies, setMovies] = useState([]);
@@ -47,29 +47,12 @@ function AdminMovies() {
     showtimes: [],
   });
   useEffect(() => {
-    fetchData("movies")
-      .then((data) => setMovies(data))
-      .catch((error) => console.error("Error fetching movies:", error));
-
-    fetchData("screens")
-      .then((data) => setScreens(data))
-      .catch((error) => console.error("Error fetching screens:", error));
-
-    fetchData("cinema")
-      .then((data) => setCinemas(data))
-      .catch((error) => console.error("Error fetching cinemas:", error));
-
-    fetchData("genres")
-      .then((data) => setGenres(data))
-      .catch((error) => console.error("Error fetching genres:", error));
-
-    fetchData("languages")
-      .then((data) => setLanguages(data))
-      .catch((error) => console.error("Error fetching languages:", error));
-
-    fetchData("movietypes")
-      .then((data) => setMovieType(data))
-      .catch((error) => console.error("Error fetching movie types:", error));
+    setMovies([{ id: 1, title: "Phim Dummy 1", duration: 120, release_date: "2026-05-01", status: "active", genre_ids: [1], language_id: 1, poster: "https://via.placeholder.com/200x300", showtimes: [] }]);
+    setScreens([{ id: 1, name: "Phòng chiếu 1" }]);
+    setCinemas([{ id: 1, name: "Cinema Dummy 1" }]);
+    setGenres([{ id: 1, name: "Hành Động" }]);
+    setLanguages([{ id: 1, name: "Tiếng Việt" }]);
+    setMovieType([{ id: 1, name: "Phim Đang Chiếu" }]);
   }, []);
 
   const handleInputChange = (e) => {
@@ -108,27 +91,21 @@ function AdminMovies() {
         : [],
     };
 
-    if (editMovie) {
-      updateData("movies", editMovie.id, movieToSubmit)
-        .then(() => {
-          setMovies((prevMovies) =>
-            prevMovies.map((movie) =>
-              movie.id === editMovie.id
-                ? { ...movieToSubmit, id: editMovie.id }
-                : movie
-            )
-          );
-          resetForm();
-        })
-        .catch((error) => console.error("Error updating movie:", error));
-    } else {
-      postData("movies", { ...movieToSubmit, id: movies.length + 1 })
-        .then((data) => {
-          setMovies([...movies, data]);
-          resetForm();
-        })
-        .catch((error) => console.error("Error adding movie:", error));
-    }
+    setTimeout(() => {
+      if (editMovie) {
+        setMovies((prevMovies) =>
+          prevMovies.map((movie) =>
+            movie.id === editMovie.id     
+              ? { ...movieToSubmit, id: editMovie.id }
+              : movie
+          )
+        );
+        resetForm();
+      } else {
+        setMovies([...movies, { ...movieToSubmit, id: Date.now() }]);
+        resetForm();
+      }
+    }, 300);
   };
 
   const handleAddShowtime = () => {
@@ -178,11 +155,9 @@ function AdminMovies() {
   };
 
   const handleDelete = (id) => {
-    deleteData("movies", id)
-      .then(() =>
-        setMovies((prevMovies) => prevMovies.filter((movie) => movie.id !== id))
-      )
-      .catch((error) => console.error("Error deleting movie:", error));
+    setTimeout(() => {
+      setMovies((prevMovies) => prevMovies.filter((movie) => movie.id !== id));
+    }, 300);
   };
 
   const handleEdit = (movie) => {
@@ -246,29 +221,16 @@ function AdminMovies() {
     if (!croppedImageBlob || !cropField) return;
     
     setUploadingField(cropField);
-    try {
-      const formData = new FormData();
-      formData.append("file", croppedImageBlob, "cropped-image.jpg");
-      const response = await fetch(`${API_BASE}/api/upload-image`, {
-        method: "POST",
-        body: formData,
-      });
-      if (!response.ok) {
-        throw new Error("Upload thất bại");
-      }
-      const data = await response.json();
+    setTimeout(() => {
+      const dummyUrl = "https://via.placeholder.com/800x400?text=Mock+Upload";
       setNewMovie((prev) => ({
         ...prev,
-        [cropField]: data.url,
+        [cropField]: dummyUrl,
       }));
-    } catch (error) {
-      console.error("Upload image error:", error);
-      alert("Upload ảnh thất bại, vui lòng thử lại.");
-    } finally {
       setUploadingField(null);
       setCropField(null);
       setCropImageSrc(null);
-    }
+    }, 1000);
   };
 
 
