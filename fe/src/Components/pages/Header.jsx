@@ -1,29 +1,20 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Container, Row, Col, Navbar, Nav, Dropdown } from "react-bootstrap";
 import { useAuth } from "../../context/AuthContext";
-import "../../CSS/Header.css";
+import "../../CSS/Nike.css";
 
 function Header() {
   const { user, isAuthenticated, logout } = useAuth();
   const [greeting, setGreeting] = useState("");
+  const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
 
-  const updateGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 11) {
-      setGreeting("Chào buổi sáng");
-    } else if (hour >= 11 && hour < 13) {
-      setGreeting("Chào buổi trưa");
-    } else if (hour < 18) {
-      setGreeting("Chào buổi chiều");
-    } else {
-      setGreeting("Chào buổi tối");
-    }
-  };
-
   useEffect(() => {
-    updateGreeting();
+    const hour = new Date().getHours();
+    if (hour < 11) setGreeting("Chào buổi sáng");
+    else if (hour < 13) setGreeting("Chào buổi trưa");
+    else if (hour < 18) setGreeting("Chào buổi chiều");
+    else setGreeting("Chào buổi tối");
   }, [location.pathname]);
 
   const handleLogout = async (e) => {
@@ -31,157 +22,63 @@ function Header() {
     await logout();
   };
 
-  const isActive = (path) => location.pathname === path ? 'active-tab' : '';
+  const isActive = (path) => location.pathname === path ? "active-tab" : "";
 
   return (
-    <>
-      <div className="header-container">
-        <Container fluid className="bg-black" style={{ padding: "4px 0" }}>
-          <Row>
-            <Col className="Sig">
-            {isAuthenticated && user ? (
-              <>
-                <Link to={`/profile/${user.id}`} className="text-decoration-none">
-                  <span className="fancy-font">
-                    {greeting}, {user.full_name || user.email}!
-                  </span>
-                </Link>
-                <Link
-                  to="#"
-                  onClick={handleLogout}
-                  className="text-decoration-none"
-                  title="Đăng xuất"
-                >
-                  <i className="bi bi-box-arrow-right"></i>
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className="text-decoration-none">
-                  Đăng Nhập
-                </Link>
-                <Link to="/login" className="text-decoration-none">
-                  Đăng Ký
-                </Link>
-              </>
-            )}
-          </Col>
-        </Row>
-      </Container>
-
-      <Navbar
-        expand="lg"
-        className="navbar"
-      >
-        <Container>
-          <Navbar.Brand
-            as={Link}
-            to={"/"}
-            className="d-flex align-items-center nav-image"
-          >
-            <img src="../assets/Logo/black_on_trans.png" alt="Movie 88" />
-          </Navbar.Brand>
-
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="custom-nav">
-              <Nav.Link
-                as={Link}
-                to="/showtime"
-                className={isActive("/showtime")}
-              >
-                Lịch Chiếu Theo Rạp
-              </Nav.Link>
-              <Nav.Link
-                as={Link}
-                to={"/movie"}
-                className={isActive("/movie")}
-              >
-                Phim
-              </Nav.Link>
-              <Nav.Link
-                as={Link}
-                to={"/info"}
-                className={isActive("/info")}
-              >
-                Rạp
-              </Nav.Link>
-              <Nav.Link
-                as={Link}
-                to={"/price"}
-                className={isActive("/price")}
-              >
-                Giá Vé
-              </Nav.Link>
-              {user?.role?.toString() === "1" && (
-                <Dropdown align="end">
-                  <Dropdown.Toggle
-                    variant="link"
-                    id="dropdown-management"
-                    className="nav-link"
-                  >
-                    Quản Lý
-                  </Dropdown.Toggle>
-
-                  <Dropdown.Menu>
-                    <Dropdown.Item
-                      as={Link}
-                      to="/account"
-                      className={isActive("/account")}
-                    >
-                      Quản Lý Tài Khoản
-                    </Dropdown.Item>
-                    <Dropdown.Item
-                      as={Link}
-                      to="/managermovies"
-                      className={isActive("/managermovies")}
-                    >
-                      Quản Lý Phim
-                    </Dropdown.Item>
-                    <Dropdown.Item
-                      as={Link}
-                      to="/languages"
-                      className={isActive("/languages")}
-                    >
-                      Quản Lý Ngôn Ngữ
-                    </Dropdown.Item>
-                    <Dropdown.Item
-                      as={Link}
-                      to="/genres"
-                      className={isActive("/genres")}
-                    >
-                      Quản Lý Thể Loại
-                    </Dropdown.Item>
-                    <Dropdown.Item
-                      as={Link}
-                      to="/movietypes"
-                      className={isActive("/movietypes")}
-                    >
-                      Quản Lý Loại Phim
-                    </Dropdown.Item>
-                    <Dropdown.Item
-                      as={Link}
-                      to="/screens"
-                      className={isActive("/screens")}
-                    >
-                      Quản Lý Màn Hình
-                    </Dropdown.Item>
-                    <Dropdown.Item
-                      as={Link}
-                      to="/tickets"
-                      className={isActive("/tickets")}
-                    >
-                      Quản Lý Vé
-                    </Dropdown.Item>
-                  </Dropdown.Menu>
-                </Dropdown>
-              )}
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
+    <header className="nike-header">
+      {/* Promo Bar */}
+      <div className="nike-promo-bar">
+        Đặt vé nhanh — Xem phim hay mỗi ngày
       </div>
-    </>
+
+      {/* Main Nav */}
+      <nav className="nike-navbar">
+        {/* Logo */}
+        <Link to="/" className="nike-navbar-logo" style={{ display: 'flex', alignItems: 'center' }}>
+          <img src="/assets/Logo/black_on_trans.png" alt="Movie 36" style={{ height: '36px' }} />
+        </Link>
+
+        {/* Center Links */}
+        <ul className="nike-navbar-nav" style={{ margin: 0 }}>
+          <li><Link to="/showtime" className={`nike-nav-link ${isActive("/showtime")}`}>Lịch Chiếu</Link></li>
+          <li><Link to="/movie" className={`nike-nav-link ${isActive("/movie")}`}>Phim</Link></li>
+          <li><Link to="/info" className={`nike-nav-link ${isActive("/info")}`}>Rạp</Link></li>
+          <li><Link to="/price" className={`nike-nav-link ${isActive("/price")}`}>Giá Vé</Link></li>
+        </ul>
+
+        {/* Right Actions */}
+        <div className="nike-navbar-actions">
+          {isAuthenticated && user ? (
+            <>
+              <Link to={`/profile/${user.id}`} style={{ fontSize: '14px', fontWeight: '500', color: '#111111', textDecoration: 'none' }}>
+                {greeting}, <strong>{user.fullName}</strong>
+              </Link>
+              <a
+                href="#"
+                onClick={handleLogout}
+                style={{ fontSize: '14px', fontWeight: '500', color: '#707072', textDecoration: 'none' }}
+                title="Đăng xuất"
+              >
+                Đăng xuất
+              </a>
+            </>
+          ) : (
+            <>
+              <Link to="/login" style={{ fontSize: '14px', fontWeight: '500', color: '#111111', textDecoration: 'none' }}>
+                Đăng nhập
+              </Link>
+              <Link
+                to="/login"
+                className="btn-nike-primary"
+                style={{ padding: '8px 20px', fontSize: '14px' }}
+              >
+                Đăng ký
+              </Link>
+            </>
+          )}
+        </div>
+      </nav>
+    </header>
   );
 }
 

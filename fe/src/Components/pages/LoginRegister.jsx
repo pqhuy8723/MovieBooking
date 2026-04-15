@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Card, Button, Form, InputGroup, Modal } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import authService from "../../services/authService";
-import "bootstrap-icons/font/bootstrap-icons.css";
-import "../../CSS/LoginRegister.css";
+import { Modal } from "react-bootstrap";
+import "../../CSS/Nike.css";
 
 const LoginRegister = () => {
   const [currentForm, setCurrentForm] = useState("login");
@@ -12,616 +11,291 @@ const LoginRegister = () => {
   const [password, setPassword] = useState("");
   const [full_name, setFull_name] = useState("");
   const [phone, setPhone] = useState("");
-  const [dob, setDob] = useState("");
-  const [address, setAddress] = useState("");
   const [gender, setGender] = useState("");
   const [remember, setRemember] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [resetToken, setResetToken] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
-  const [popupVisible, setPopupVisible] = useState(false);
-  const [popupContent, setPopupContent] = useState({ title: "", message: "" });
-  const [resetValidationErrors, setResetValidationErrors] = useState({});
+  const [successModal, setSuccessModal] = useState(false);
 
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const rememberedAccount = localStorage.getItem("rememberedAccount");
-    if (rememberedAccount) {
-      const { email, password } = JSON.parse(rememberedAccount);
-      setEmail(email);
-      setPassword(password);
-      setRemember(true);
+    const remembered = localStorage.getItem("rememberedAccount");
+    if (remembered) {
+      const { email: e, password: p } = JSON.parse(remembered);
+      setEmail(e); setPassword(p); setRemember(true);
     }
   }, []);
 
-  // Nếu người dùng đã login (có cookie chuẩn) thì nhảy qua index
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/");
+    if (isAuthenticated && user) {
+      navigate(user.role === "ADMIN" ? "/account" : "/");
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-
+    setErrorMessage("");
     const result = await login(email, password);
-
     if (result.success) {
-      if (remember) {
-        localStorage.setItem("rememberedAccount", JSON.stringify({ email, password }));
-      } else {
-        localStorage.removeItem("rememberedAccount");
-      }
-      navigate("/");
+      if (remember) localStorage.setItem("rememberedAccount", JSON.stringify({ email, password }));
+      else localStorage.removeItem("rememberedAccount");
     } else {
       setErrorMessage(result.message);
     }
-
     setIsSubmitting(false);
   };
-  const validateResetPassword = () => {
-    const resetValidationErrors = {};
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
-    if (!resetToken) {
-      resetValidationErrors.resetToken = "Token không được bỏ trống!"
-    }
-    if (!newPassword) {
-      resetValidationErrors.newPassword = "Mật khẩu không được bỏ trống!";
-    } else if (!passwordRegex.test(newPassword)) {
-      resetValidationErrors.newPassword = "Mật khẩu phải có ít nhất 8 ký tự, ít nhất 1 chữ hoa và 1 số!";
-    }
 
-    if (!confirmNewPassword) {
-      resetValidationErrors.confirmNewPassword = "Vui lòng xác nhận mật khẩu!";
-    } else if (newPassword !== confirmNewPassword) {
-      resetValidationErrors.confirmNewPassword = "Mật khẩu và xác nhận mật khẩu không khớp!";
-    }
-
-    setResetValidationErrors(resetValidationErrors);
-    return Object.keys(resetValidationErrors).length === 0;
+  const validateRegister = () => {
+    const errs = {};
+    const emailReg = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const phoneReg = /^0\d{9,10}$/;
+    if (!full_name) errs.full_name = "Họ và tên không được để trống";
+    if (!email || !emailReg.test(email)) errs.email = "Email không hợp lệ";
+    if (!phone || !phoneReg.test(phone)) errs.phone = "Số điện thoại không hợp lệ";
+    if (!gender) errs.gender = "Vui lòng chọn giới tính";
+    if (!password || password.length < 6) errs.password = "Mật khẩu tối thiểu 6 ký tự";
+    if (password !== confirmPassword) errs.confirmPassword = "Mật khẩu không khớp";
+    setValidationErrors(errs);
+    return Object.keys(errs).length === 0;
   };
-  const validateFields = async () => {
-    const validationErrors = {};
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    const phoneRegex = /^0\d{9,10}$/;
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
-    const today = new Date();
 
-    if (!full_name) validationErrors.full_name = "Họ và tên không được bỏ trống!";
-    if (!gender) validationErrors.gender = "Giới tính không được bỏ trống!";
-    if (!email) {
-      validationErrors.email = "Email không được bỏ trống!";
-    } else if (!emailRegex.test(email)) {
-      validationErrors.email = "Email không đúng định dạng!";
-    } else {
-      const emailExists = email === "admin@gmail.com";
-      if (emailExists) validationErrors.email = "Email đã được đăng ký!";
-    }
-
-    if (!phone) {
-      validationErrors.phone = "Số điện thoại không được bỏ trống!";
-    } else if (!phoneRegex.test(phone)) {
-      validationErrors.phone = "Số điện thoại không đúng định dạng!";
-    } else {
-      const phoneExists = phone === "0123456789";
-      if (phoneExists) validationErrors.phone = "Số điện thoại đã được đăng ký!";
-    }
-
-    if (!dob) {
-      validationErrors.dob = "Ngày sinh không được bỏ trống!";
-    } else if (new Date(dob) > today) {
-      validationErrors.dob = "Ngày sinh không được là ngày sau hôm nay!";
-    }
-
-    if (!password) {
-      validationErrors.password = "Mật khẩu không được bỏ trống!";
-    } else if (!passwordRegex.test(password)) {
-      validationErrors.password = "Mật khẩu phải có ít nhất 8 ký tự, ít nhất 1 chữ hoa và 1 số!";
-    }
-
-    if (!confirmPassword) {
-      validationErrors.confirmPassword = "Vui lòng xác nhận mật khẩu!";
-    } else if (password !== confirmPassword) {
-      validationErrors.confirmPassword = "Mật khẩu và xác nhận mật khẩu không khớp!";
-    }
-
-    if (!address) validationErrors.address = "Địa chỉ không được bỏ trống!";
-
-    setValidationErrors(validationErrors);
-    return Object.keys(validationErrors).length === 0;
-  };
   const handleRegister = async (e) => {
     e.preventDefault();
-
-    const isValid = await validateFields();
-    if (!isValid) return;
-
+    if (!validateRegister()) return;
     setIsSubmitting(true);
     setErrorMessage("");
-
     try {
-      await authService.register({
-        fullName: full_name,
-        email,
-        password,
-        phone,
-        gender
-      });
-      setShowSuccessModal(true);
+      await authService.register({ fullName: full_name, email, password, phone, gender });
+      setSuccessModal(true);
       setCurrentForm("login");
-    } catch (error) {
-      setErrorMessage(error.response?.data?.message || "Đăng ký thất bại, thử lại sau!");
+    } catch (err) {
+      setErrorMessage(err.response?.data?.message || "Đăng ký thất bại. Thử lại sau!");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleForgotPassword = async (e) => {
-    e.preventDefault();
-
-    if (!email.trim()) {
-      setErrorMessage("Email không được để trống");
-      return;
-    }
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setPopupContent({
-        title: "Yêu cầu thành công",
-        message: "Yêu cầu đặt lại mật khẩu đã được gửi.",
-      });
-      setPopupVisible(true);
-      setCurrentForm("resetPassword");
-      setIsSubmitting(false);
-    }, 500);
+  const inputStyle = {
+    width: '100%',
+    background: '#F5F5F5',
+    border: '1px solid #CACACB',
+    borderRadius: '8px',
+    padding: '12px 16px',
+    fontSize: '16px',
+    fontFamily: 'Helvetica, Arial, sans-serif',
+    outline: 'none',
+    transition: 'border-color 200ms ease',
+    color: '#111111',
+    marginBottom: '4px',
   };
 
-  const handleResetPassword = async (e) => {
-    e.preventDefault();
-    const isValid = validateResetPassword();
-    if (!isValid) return;
-    setTimeout(() => {
-      setPopupContent({
-        title: "Thay đổi thành công",
-        message: "Mật khẩu đã được thay đổi.",
-      });
-      setPopupVisible(true);
-      setCurrentForm("login");
-    }, 500);
+  const labelStyle = {
+    fontSize: '12px',
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
+    color: '#707072',
+    marginBottom: '6px',
+    display: 'block',
   };
-  const handleCancel = () => {
-    setEmail("");
-    setPassword("");
-    setFull_name("");
-    setPhone("");
-    setDob("");
-    setGender("");
-    setAddress("");
-    setConfirmPassword("");
-    setResetToken("");
-    setNewPassword("");
-    setConfirmNewPassword("");
-    setErrorMessage("");
-    setValidationErrors({});
-    setCurrentForm("login");
-  };
+
+  const errStyle = { fontSize: '12px', color: '#D30005', marginBottom: '12px', display: 'block' };
+
   return (
-    <div className="login-register-container">
-      <Card className="text-center border-0">
-        <Card.Body>
-          <div className="tabs mb-4">
-            <Button
-              variant="outline-danger"
-              className={`me-2 ${currentForm === "login" ? "active-tab" : ""}`}
-              onClick={() => setCurrentForm("login")}
-            >
-              <i className="bi bi-box-arrow-in-right"> Đăng nhập</i>
-            </Button>
-            <Button
-              variant="outline-warning"
-              className={currentForm === "register" ? "active-tab" : ""}
-              onClick={() => setCurrentForm("register")}
-            >
-              <i className="bi bi-person-plus-fill"> Đăng ký</i>
-            </Button>
-          </div>
+    <div className="nike-login-wrap">
+      <div className="nike-login-box">
+        {/* Logo / Brand */}
+        <div className="nike-login-logo">
+          <h1>MOVIE 36</h1>
+          <p style={{ fontSize: '14px', color: '#707072', marginTop: '4px', textTransform: 'none', fontWeight: '400' }}>
+            {currentForm === "login" ? "Chào mừng trở lại" : "Tạo tài khoản mới"}
+          </p>
+        </div>
 
-          <div className="form-container">
-            {currentForm === "login" && (
-              <Form onSubmit={handleLogin}>
-                <h2>Đăng nhập</h2>
-                <InputGroup className="mb-3">
-                  <InputGroup.Text>
-                    <i className="bi bi-envelope"></i>
-                  </InputGroup.Text>
-                  <Form.Control
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value.toLowerCase())}
-                    required
-                  />
-                </InputGroup>
-                <InputGroup className="mb-3">
-                  <InputGroup.Text>
-                    <i className="bi bi-lock"></i>
-                  </InputGroup.Text>
-                  <Form.Control
-                    type="password"
-                    placeholder="Mật khẩu"
-                    value={password}
-                    onChange={(e) => { setPassword(e.target.value); setErrorMessage("") }}
-                    required
-                  />
-                </InputGroup>
-                {errorMessage && <p className="text-danger">{errorMessage}</p>}
-                <Form.Group
-                  className="mb-3"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    textAlign: "left",
-                    marginLeft: "10px",
-                  }}
+        {/* Tabs */}
+        <div className="nike-tabs">
+          <button
+            className={`nike-tab ${currentForm === "login" ? "active" : ""}`}
+            onClick={() => { setCurrentForm("login"); setErrorMessage(""); setValidationErrors({}); }}
+          >
+            Đăng nhập
+          </button>
+          <button
+            className={`nike-tab ${currentForm === "register" ? "active" : ""}`}
+            onClick={() => { setCurrentForm("register"); setErrorMessage(""); setValidationErrors({}); }}
+          >
+            Đăng ký
+          </button>
+        </div>
+
+        {/* LOGIN FORM */}
+        {currentForm === "login" && (
+          <form onSubmit={handleLogin}>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={labelStyle}>Email</label>
+              <input
+                type="email"
+                style={inputStyle}
+                value={email}
+                onChange={(e) => { setEmail(e.target.value.toLowerCase()); setErrorMessage(""); }}
+                placeholder="email@example.com"
+                required
+              />
+            </div>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={labelStyle}>Mật khẩu</label>
+              <input
+                type="password"
+                style={inputStyle}
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setErrorMessage(""); }}
+                placeholder="Nhập mật khẩu"
+                required
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', color: '#707072' }}>
+                <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+                Ghi nhớ
+              </label>
+            </div>
+
+            {errorMessage && (
+              <div style={{ background: '#FFE5E5', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', color: '#D30005', fontSize: '14px' }}>
+                {errorMessage}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="btn-nike-primary"
+              style={{ width: '100%' }}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
+            </button>
+          </form>
+        )}
+
+        {/* REGISTER FORM */}
+        {currentForm === "register" && (
+          <form onSubmit={handleRegister}>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={labelStyle}>Họ và tên *</label>
+              <input
+                type="text"
+                style={{ ...inputStyle, borderColor: validationErrors.full_name ? '#D30005' : '#CACACB' }}
+                value={full_name}
+                onChange={(e) => { setFull_name(e.target.value); setValidationErrors(v => ({ ...v, full_name: '' })); }}
+                placeholder="Nguyễn Văn A"
+              />
+              {validationErrors.full_name && <span style={errStyle}>{validationErrors.full_name}</span>}
+            </div>
+
+            <div style={{ marginBottom: '12px' }}>
+              <label style={labelStyle}>Email *</label>
+              <input
+                type="email"
+                style={{ ...inputStyle, borderColor: validationErrors.email ? '#D30005' : '#CACACB' }}
+                value={email}
+                onChange={(e) => { setEmail(e.target.value.toLowerCase()); setValidationErrors(v => ({ ...v, email: '' })); }}
+                placeholder="email@example.com"
+              />
+              {validationErrors.email && <span style={errStyle}>{validationErrors.email}</span>}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+              <div>
+                <label style={labelStyle}>Số điện thoại *</label>
+                <input
+                  type="text"
+                  style={{ ...inputStyle, borderColor: validationErrors.phone ? '#D30005' : '#CACACB' }}
+                  value={phone}
+                  onChange={(e) => { setPhone(e.target.value); setValidationErrors(v => ({ ...v, phone: '' })); }}
+                  placeholder="0901234567"
+                />
+                {validationErrors.phone && <span style={errStyle}>{validationErrors.phone}</span>}
+              </div>
+              <div>
+                <label style={labelStyle}>Giới tính *</label>
+                <select
+                  style={{ ...inputStyle, borderColor: validationErrors.gender ? '#D30005' : '#CACACB', cursor: 'pointer' }}
+                  value={gender}
+                  onChange={(e) => { setGender(e.target.value); setValidationErrors(v => ({ ...v, gender: '' })); }}
                 >
-                  <Form.Check.Input type="checkbox" id="remember" checked={remember} onChange={(e) => setRemember(e.target.checked)} style={{ marginRight: "10px" }} />
-                  <Form.Check.Label htmlFor="remember">Remember</Form.Check.Label>
-                </Form.Group>
+                  <option value="">Chọn</option>
+                  <option value="MALE">Nam</option>
+                  <option value="FEMALE">Nữ</option>
+                  <option value="OTHER">Khác</option>
+                </select>
+                {validationErrors.gender && <span style={errStyle}>{validationErrors.gender}</span>}
+              </div>
+            </div>
 
-                <div className="forgot-password">
-                  <Button
-                    style={{
-                      textDecoration: "none",
-                      background: "none",
-                      border: "none",
-                      padding: 0,
-                      color: "inherit",
-                      cursor: "pointer",
-                    }}
-                    onClick={() => setCurrentForm("forgotPassword")}
-                  >
-                    <i className="bi bi-question-circle"> Quên mật khẩu?</i>
-                  </Button>
-                </div>
-                <Button type="submit" className="btn-danger w-100">
-                  <i className="bi bi-box-arrow-in-right"> Đăng nhập</i>
-                </Button>
-              </Form>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={labelStyle}>Mật khẩu *</label>
+              <input
+                type="password"
+                style={{ ...inputStyle, borderColor: validationErrors.password ? '#D30005' : '#CACACB' }}
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setValidationErrors(v => ({ ...v, password: '' })); }}
+                placeholder="Tối thiểu 6 ký tự"
+              />
+              {validationErrors.password && <span style={errStyle}>{validationErrors.password}</span>}
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={labelStyle}>Xác nhận mật khẩu *</label>
+              <input
+                type="password"
+                style={{ ...inputStyle, borderColor: validationErrors.confirmPassword ? '#D30005' : '#CACACB' }}
+                value={confirmPassword}
+                onChange={(e) => { setConfirmPassword(e.target.value); setValidationErrors(v => ({ ...v, confirmPassword: '' })); }}
+                placeholder="Nhập lại mật khẩu"
+              />
+              {validationErrors.confirmPassword && <span style={errStyle}>{validationErrors.confirmPassword}</span>}
+            </div>
+
+            {errorMessage && (
+              <div style={{ background: '#FFE5E5', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', color: '#D30005', fontSize: '14px' }}>
+                {errorMessage}
+              </div>
             )}
 
-            {currentForm === "register" && (
-              <Form onSubmit={handleRegister}>
-                <h2>Đăng ký</h2>
-                <InputGroup className="mb-3">
-                  <InputGroup.Text>
-                    <i className="bi bi-person"></i>
-                  </InputGroup.Text>
-                  <Form.Control
-                    type="text"
-                    placeholder="* Họ tên"
-                    value={full_name}
-                    onChange={(e) => {
-                      setFull_name(e.target.value);
-                      setErrorMessage("");
-                      setValidationErrors((prevErrors) => ({
-                        ...prevErrors,
-                        full_name: "",
-                      }));
-                    }}
-                    isInvalid={!!validationErrors.full_name}
-                  />
-                </InputGroup>
-                <InputGroup className="mb-3">
-                  <InputGroup.Text>
-                    <i className="bi bi-envelope"></i>
-                  </InputGroup.Text>
-                  <Form.Control
-                    type="email"
-                    placeholder="* Email"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value.toLowerCase());
-                      setErrorMessage("");
-                      setValidationErrors((prevErrors) => ({
-                        ...prevErrors,
-                        email: "",
-                      }));
-                    }}
-                    isInvalid={!!validationErrors.email}
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {validationErrors.email}
-                  </Form.Control.Feedback>
-                </InputGroup>
-                <InputGroup className="mb-3">
-                  <InputGroup.Text>
-                    <i className="bi bi-lock"></i>
-                  </InputGroup.Text>
-                  <Form.Control
-                    type="password"
-                    placeholder="* Mật khẩu"
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      setErrorMessage("");
-                      setValidationErrors((prevErrors) => ({
-                        ...prevErrors,
-                        password: "",
-                      }));
-                    }}
-                    isInvalid={!!validationErrors.password}
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {validationErrors.password}
-                  </Form.Control.Feedback>
-                </InputGroup>
-                <InputGroup className="mb-3">
-                  <InputGroup.Text>
-                    <i className="bi bi-lock-fill"></i>
-                  </InputGroup.Text>
-                  <Form.Control
-                    type="password"
-                    placeholder="* Xác nhận mật khẩu"
-                    value={confirmPassword}
-                    onChange={(e) => {
-                      setConfirmPassword(e.target.value);
-                      setErrorMessage("");
-                      setValidationErrors((prevErrors) => ({
-                        ...prevErrors,
-                        confirmPassword: "",
-                      }));
-                    }}
-                    isInvalid={!!validationErrors.confirmPassword}
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {validationErrors.confirmPassword}
-                  </Form.Control.Feedback>
-                </InputGroup>
-                <InputGroup className="mb-3">
-                  <InputGroup.Text>
-                    <i className="bi bi-telephone-fill"></i>
-                  </InputGroup.Text>
-                  <Form.Control
-                    type="text"
-                    placeholder="* Số điện thoại"
-                    value={phone}
-                    onChange={(e) => {
-                      setPhone(e.target.value);
-                      setErrorMessage("");
-                      setValidationErrors((prevErrors) => ({
-                        ...prevErrors,
-                        phone: "",
-                      }));
-                    }}
-                    isInvalid={!!validationErrors.phone}
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {validationErrors.phone}
-                  </Form.Control.Feedback>
-                </InputGroup>
-                <InputGroup className="mb-3">
-                  <InputGroup.Text>
-                    <i className="bi bi-calendar-date"></i>
-                  </InputGroup.Text>
-                  <Form.Control
-                    type="date"
-                    placeholder="* Ngày sinh"
-                    value={dob}
-                    onChange={(e) => {
-                      setDob(e.target.value);
-                      setErrorMessage("");
-                      setValidationErrors((prevErrors) => ({
-                        ...prevErrors,
-                        dob: "",
-                      }));
-                    }}
-                    isInvalid={!!validationErrors.dob}
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {validationErrors.dob}
-                  </Form.Control.Feedback>
-                </InputGroup>
-                <InputGroup className="mb-3">
-                  <InputGroup.Text>
-                    <i className="bi bi-gender-ambiguous"></i>
-                  </InputGroup.Text>
-                  <Form.Control
-                    as="select"
-                    value={gender}
-                    onChange={(e) => {
-                      setGender(e.target.value);
-                      setErrorMessage("");
-                      setValidationErrors((prevErrors) => ({
-                        ...prevErrors,
-                        gender: "",
-                      }));
-                    }}
-                    isInvalid={!!validationErrors.gender}
-                  >
-                    <option value="">* Giới tính</option>
-                    <option value="Male">Nam</option>
-                    <option value="Female">Nữ</option>
-                    <option value="Other">Khác</option>
-                  </Form.Control>
-                  <Form.Control.Feedback type="invalid">
-                    {validationErrors.gender}
-                  </Form.Control.Feedback>
-                </InputGroup>
-                <InputGroup className="mb-3">
-                  <InputGroup.Text>
-                    <i className="bi bi-geo-alt"></i>
-                  </InputGroup.Text>
-                  <Form.Control
-                    type="text"
-                    placeholder="* Địa chỉ"
-                    value={address}
-                    onChange={(e) => {
-                      setAddress(e.target.value);
-                      setErrorMessage("");
-                      setValidationErrors((prevErrors) => ({
-                        ...prevErrors,
-                        address: "",
-                      }));
-                    }}
-                    isInvalid={!!validationErrors.address}
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {validationErrors.address}
-                  </Form.Control.Feedback>
-                </InputGroup>
-
-                {errorMessage && <p className="text-danger">{errorMessage}</p>}
-
-                <Button style={{ marginBottom: "5px" }} variant="secondary" onClick={handleCancel}>
-                  <i className="bi bi-x-circle"> Hủy</i>
-                </Button>
-                <Button type="submit" className="btn-warning w-100">
-                  <i className="bi bi-person-plus-fill"> Đăng ký</i>
-                </Button>
-              </Form>
-            )}
-            <Modal
-              show={showSuccessModal}
-              onHide={() => setShowSuccessModal(false)}
-              backdrop="static"
-              centered
+            <button
+              type="submit"
+              className="btn-nike-primary"
+              style={{ width: '100%' }}
+              disabled={isSubmitting}
             >
-              <Modal.Header closeButton>
-                <Modal.Title>Tạo Tài Khoản Thành Công</Modal.Title>
-              </Modal.Header>
-              <Modal.Body>
-                <p>Tài Khoản Của Bạn Đã Được Tạo Thành Công. Vui Lòng Đăng Nhập Để Trải Nghiệm!</p>
-              </Modal.Body>
-              <Modal.Footer>
-                <Button variant="secondary" onClick={() => setShowSuccessModal(false)}>
-                  Close
-                </Button>
-              </Modal.Footer>
-            </Modal>
-            {currentForm === "forgotPassword" && (
-              <>
-                <Form onSubmit={handleForgotPassword}>
-                  {errorMessage && <div className="text-danger">{errorMessage}</div>}
+              {isSubmitting ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
+            </button>
+          </form>
+        )}
+      </div>
 
-                  <h2 className="mb-4">Quên mật khẩu</h2>
-
-                  <InputGroup className="mb-3">
-                    <InputGroup.Text>
-                      <i className="bi bi-envelope"></i>
-                    </InputGroup.Text>
-                    <Form.Control
-                      type="email"
-                      value={email}
-                      onChange={(e) => { setEmail(e.target.value.toLowerCase()); setErrorMessage("") }}
-                      placeholder="Nhập email"
-                      required
-                    />
-                  </InputGroup>
-
-                  <Button style={{ marginBottom: "5px" }} disabled={isSubmitting} variant="secondary" onClick={handleCancel}>
-                    <i className="bi bi-x-circle"> Hủy</i>
-                  </Button>
-                  <Button variant="primary" disabled={isSubmitting} type="submit" className="w-100">
-                    <i className="bi bi-send"> Gửi yêu cầu đặt lại mật khẩu</i>
-                  </Button>
-                </Form>
-              </>
-            )}
-
-            {currentForm === "resetPassword" && (
-              <>
-                <Form onSubmit={handleResetPassword}>
-                  {errorMessage && <div className="text-danger">{errorMessage}</div>}
-
-                  <h2 className="mb-4">Đặt lại mật khẩu</h2>
-
-                  <InputGroup className="mb-3">
-                    <InputGroup.Text>
-                      <i className="bi bi-check2-circle"></i>
-                    </InputGroup.Text>
-                    <Form.Control
-                      type="text"
-                      value={resetToken}
-                      onChange={(e) => {
-                        setResetToken(e.target.value); setErrorMessage(""); setResetValidationErrors((prevErrors) => ({
-                          ...prevErrors,
-                          resetToken: "",
-                        }))
-                      }}
-                      placeholder="Nhập mã reset"
-                      isInvalid={!!resetValidationErrors.resetToken}
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {resetValidationErrors.resetToken}
-                    </Form.Control.Feedback>
-                  </InputGroup>
-
-                  <InputGroup className="mb-3">
-                    <InputGroup.Text>
-                      <i className="bi bi-key"></i>
-                    </InputGroup.Text>
-                    <Form.Control
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => {
-                        setNewPassword(e.target.value);
-                        setErrorMessage("");
-                        setResetValidationErrors((prevErrors) => ({
-                          ...prevErrors,
-                          newPassword: "",
-                        }))
-                      }}
-                      placeholder="Nhập mật khẩu mới"
-                      isInvalid={!!resetValidationErrors.newPassword}
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {resetValidationErrors.newPassword}
-                    </Form.Control.Feedback>
-                  </InputGroup>
-
-                  <InputGroup className="mb-3">
-                    <InputGroup.Text>
-                      <i className="bi bi-lock-fill"></i>
-                    </InputGroup.Text>
-                    <Form.Control
-                      type="password"
-                      value={confirmNewPassword}
-                      onChange={(e) => { setConfirmNewPassword(e.target.value); setErrorMessage(""); setResetValidationErrors((prevErrors) => ({ ...prevErrors, confirmNewPassword: "" })) }}
-                      placeholder="Xác nhận mật khẩu mới"
-                      isInvalid={!!resetValidationErrors.confirmNewPassword}
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {resetValidationErrors.confirmNewPassword}
-                    </Form.Control.Feedback>
-                  </InputGroup>
-                  <Button style={{ marginBottom: "5px" }} variant="secondary" onClick={handleCancel}>
-                    <i className="bi bi-x-circle"> Hủy</i>
-                  </Button>
-                  <Button variant="primary" type="submit" className="w-100">
-                    <i className="bi bi-check-circle"> Đặt lại mật khẩu</i>
-                  </Button>
-                </Form>
-              </>
-            )}
-          </div>
-        </Card.Body>
-      </Card>
-      <Modal show={popupVisible} onHide={() => setPopupVisible(false)} centered>
+      {/* Success modal */}
+      <Modal show={successModal} onHide={() => setSuccessModal(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>{popupContent.title}</Modal.Title>
+          <Modal.Title>TẠO TÀI KHOẢN THÀNH CÔNG</Modal.Title>
         </Modal.Header>
-        <Modal.Body>{popupContent.message}</Modal.Body>
+        <Modal.Body>
+          <p style={{ color: '#707072' }}>Tài khoản đã được tạo. Vui lòng đăng nhập để tiếp tục.</p>
+        </Modal.Body>
         <Modal.Footer>
-          <Button variant="primary" onClick={() => setPopupVisible(false)}>
-            Đóng
-          </Button>
+          <button
+            className="btn-nike-primary"
+            style={{ padding: '10px 24px' }}
+            onClick={() => setSuccessModal(false)}
+          >
+            Đăng nhập ngay
+          </button>
         </Modal.Footer>
       </Modal>
     </div>

@@ -7,7 +7,6 @@ const authService = {
   },
 
   register: async (userData) => {
-    // Gọi đến API register của bạn ở BE (Có phân quyền user, email, password, etc)
     const response = await axiosClient.post('/auth/register', userData);
     return response.data;
   },
@@ -18,9 +17,18 @@ const authService = {
   },
 
   getMe: async () => {
-    const response = await axiosClient.get('/auth/me');
+    const response = await axiosClient.get('/users/profile');
     return response.data;
-  }
+  },
+
+  changePassword: async ({ oldPassword, newPassword, confirmPassword }) => {
+    const response = await axiosClient.put('/auth/change-password', {
+      oldPassword,
+      newPassword,
+      confirmPassword,
+    });
+    return response.data;
+  },
 };
 
 export default authService;

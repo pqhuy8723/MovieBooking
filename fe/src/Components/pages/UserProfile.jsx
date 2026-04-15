@@ -1,21 +1,22 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Container, Row, Col, Form, Button, Modal, Table } from "react-bootstrap";
-// Removed API service imports
-import { Lock } from 'react-bootstrap-icons';
+import { Lock, PencilSquare } from 'react-bootstrap-icons';
 import { InputGroup, FormControl } from 'react-bootstrap';
+import authService from "../../services/authService";
+import bookingService from "../../services/bookingService";
 
 function UserProfile() {
   const { id } = useParams();
   const [show, setShow] = useState(false);
-  const [accounts, setAccounts] = useState([]);
+  const [showEdit, setShowEdit] = useState(false);
+  const [tickets, setTickets] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
     phone: "",
-    dob: "",
-    address: "",
     gender: "",
   });
   const [errors, setErrors] = useState({});
@@ -23,83 +24,83 @@ function UserProfile() {
   const [updating, setUpdating] = useState(false);
   const [userData, setUserData] = useState(null);
   const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
+    oldPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
+
+  const [successMessage, setSuccessMessage] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
   useEffect(() => {
-    const getUserData = () => {
-      setLoading(true);
-      setTimeout(() => {
-        const fakeData = {
-          full_name: "User Dummy", email: "dummy@gmail.com", phone: "0123456789", 
-          dob: "2000-01-01", address: "Hanoi", gender: "Nam",
-          tickets: [
-            { id: "T1", movie: "Dummy Phim", cinema: "Cinema Dummy", seats: ["A1"], date: "2026-05-15", startTime: "10:00", endTime: "12:00", totalPrice: 50000, status: "active" }
-          ]
-        };
-        setUserData(fakeData);
+    const fetchUser = async () => {
+      try {
+        setLoading(true);
+        const responseData = await authService.getMe();
+        const userInfo = responseData.data || responseData;
+        setUserData(userInfo);
+
         setFormData({
-          full_name: fakeData.full_name,
-          email: fakeData.email,
-          phone: fakeData.phone,
-          dob: fakeData.dob,
-          address: fakeData.address,
-          gender: fakeData.gender,
+          full_name: userInfo.fullName || "",
+          email: userInfo.email || "",
+          phone: userInfo.phone || "",
+          gender: userInfo.gender || "",
         });
-        setAccounts(fakeData.tickets);
+
+        const bookingsRes = await bookingService.getMyBookings();
+        const ticketsList = bookingsRes.data?.data || bookingsRes.data || [];
+        setTickets(ticketsList);
+      } catch (err) {
+        console.error(err);
+      } finally {
         setLoading(false);
-      }, 500);
+      }
     };
 
-    getUserData();
+    fetchUser();
   }, [id]);
 
   const filterTickets = (ticket) => {
     const lowerSearchTerm = searchTerm.toLowerCase();
     return (
-      ticket.id.toLowerCase().includes(lowerSearchTerm) ||
-      ticket.movie.toLowerCase().includes(lowerSearchTerm) ||
-      ticket.cinema.toLowerCase().includes(lowerSearchTerm) ||
-      ticket.seats.toLowerCase().includes(lowerSearchTerm) ||
-      ticket.date.toLowerCase().includes(lowerSearchTerm) ||
-      ticket.startTime.toLowerCase().includes(lowerSearchTerm) ||
-      ticket.endTime.toLowerCase().includes(lowerSearchTerm)
+      (ticket.bookingCode || "").toLowerCase().includes(lowerSearchTerm) ||
+      (ticket.movieTitle || "").toLowerCase().includes(lowerSearchTerm) ||
+      (ticket.cinemaName || "").toLowerCase().includes(lowerSearchTerm)
     );
   };
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
   };
+
   const handleClose = () => {
     setShow(false);
     setPasswordData({
-      currentPassword: "",
+      oldPassword: "",
       newPassword: "",
       confirmPassword: "",
     });
     setErrors({});
   };
-  const [successMessage, setSuccessMessage] = useState("");
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const handleShow = () => setShow(true);
+
+  const handleCloseEdit = () => {
+    setShowEdit(false);
+    setErrors({});
+  };
+  const handleShowEdit = () => setShowEdit(true);
+
   const handleModalClose = () => {
     setShowSuccessModal(false);
     setSuccessMessage("");
   };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name === "email") {
-      setFormData({
-        ...formData,
-        [name]: value.toLowerCase(),
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
-    }
-
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
     setErrors({ ...errors, [name]: "" });
   };
 
@@ -114,83 +115,23 @@ function UserProfile() {
 
   const validateFields = () => {
     const validationErrors = {};
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    const phoneRegex = /^0\d{9,10}$/;
-    const today = new Date();
-
     if (!formData.full_name) validationErrors.full_name = "Họ và tên không được bỏ trống!";
-    if (!formData.gender) validationErrors.gender = "Giới tính không được bỏ trống!";
-
-    if (!formData.email) {
-      validationErrors.email = "Email không được bỏ trống!";
-    } else if (!emailRegex.test(formData.email)) {
-      validationErrors.email = "Email không đúng định dạng! (....@gmail.com)";
-    }
-
-    if (!formData.phone) {
-      validationErrors.phone = "Số điện thoại không được bỏ trống!";
-    } else if (!phoneRegex.test(formData.phone)) {
-      validationErrors.phone = "Số điện thoại không đúng định dạng! (Bắt đầu bằng số 0 và 10-11 số)";
-    }
-
-    if (!formData.dob) {
-      validationErrors.dob = "Ngày sinh không được bỏ trống!";
-    } else if (new Date(formData.dob) > today) {
-      validationErrors.dob = "Ngày sinh không được là ngày sau hôm nay!";
-    }
-
-    if (!formData.address) validationErrors.address = "Địa chỉ không được bỏ trống!";
-
     setErrors(validationErrors);
     return Object.keys(validationErrors).length === 0;
   };
 
   const validatePasswordFields = () => {
     const validationErrors = {};
-
-    if (!passwordData.currentPassword) {
-      validationErrors.currentPassword = "Mật khẩu hiện tại không được bỏ trống!";
-    } else if (passwordData.currentPassword !== userData.password) {
-      validationErrors.currentPassword = "Mật khẩu hiện tại không đúng.";
-    }
-
-    if (!passwordData.newPassword) {
-      validationErrors.newPassword = "Mật khẩu mới không được bỏ trống!";
-    } else if (passwordData.newPassword.length < 8) {
-      validationErrors.newPassword = "Mật khẩu phải có ít nhất 8 ký tự!";
-    }
-
-    if (!passwordData.confirmPassword) {
-      validationErrors.confirmPassword = "Xác nhận mật khẩu không được bỏ trống!";
-    } else if (passwordData.newPassword !== passwordData.confirmPassword) {
-      validationErrors.confirmPassword = "Mật khẩu mới và xác nhận mật khẩu không trùng khớp.";
-    }
-
+    if (!passwordData.oldPassword)
+      validationErrors.oldPassword = "Mật khẩu hiện tại không được bỏ trống!";
+    if (!passwordData.newPassword || passwordData.newPassword.length < 6)
+      validationErrors.newPassword = "Mật khẩu mới phải có ít nhất 6 ký tự!";
+    if (!passwordData.confirmPassword)
+      validationErrors.confirmPassword = "Vui lòng xác nhận mật khẩu!";
+    else if (passwordData.newPassword !== passwordData.confirmPassword)
+      validationErrors.confirmPassword = "Mật khẩu xác nhận không khớp!";
     setErrors(validationErrors);
     return Object.keys(validationErrors).length === 0;
-  };
-
-  const getUserData = () => {
-    setLoading(true);
-    setTimeout(() => {
-       const fakeData = {
-          full_name: "User Dummy", email: "dummy@gmail.com", phone: "0123456789", 
-          dob: "2000-01-01", address: "Hanoi", gender: "Nam",
-          tickets: [
-            { id: "T1", movie: "Dummy Phim", cinema: "Cinema Dummy", seats: ["A1"], date: "2026-05-15", startTime: "10:00", endTime: "12:00", totalPrice: 50000, status: "active" }
-          ]
-        };
-      setUserData(fakeData);
-      setFormData({
-        full_name: fakeData.full_name,
-        email: fakeData.email,
-        phone: fakeData.phone,
-        dob: fakeData.dob,
-        address: fakeData.address,
-        gender: fakeData.gender,
-      });
-      setLoading(false);
-    }, 500);
   };
 
   const handleSubmit = (e) => {
@@ -198,301 +139,281 @@ function UserProfile() {
     if (!validateFields()) return;
     setUpdating(true);
     setTimeout(() => {
-      setSuccessMessage("Cập nhật thành công!");
+      setSuccessMessage("Tính năng cập nhật đang được hoàn thiện!");
       setShowSuccessModal(true);
-      getUserData();
       setUpdating(false);
+      handleCloseEdit();
     }, 500);
   };
 
-  const handlePasswordSubmit = (e) => {
+  const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     if (!validatePasswordFields()) return;
-    setUpdating(true);
-    setTimeout(() => {
+
+    try {
+      setUpdating(true);
+      await authService.changePassword({
+        oldPassword: passwordData.oldPassword,
+        newPassword: passwordData.newPassword,
+        confirmPassword: passwordData.confirmPassword,
+      });
       setSuccessMessage("Đổi mật khẩu thành công!");
       setShowSuccessModal(true);
       handleClose();
+    } catch (err) {
+      const msg = err.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại!";
+      setErrors({ oldPassword: msg });
+    } finally {
       setUpdating(false);
-    }, 500);
+    }
   };
 
-  useEffect(() => {
-    getUserData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
-
   if (loading) {
-    return <div>Đang tải dữ liệu...</div>;
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: "50vh" }}>
+        <div className="spinner-border text-dark" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="center">
-      <Container>
+    <div style={{ backgroundColor: '#FFFFFF', minHeight: '80vh', padding: '48px 0', fontFamily: 'Helvetica, Arial, sans-serif' }}>
+      <Container style={{ maxWidth: '960px' }}>
+
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h2 style={{ fontFamily: 'Helvetica, sans-serif', fontWeight: '700', fontSize: '32px', textTransform: 'uppercase', color: '#111111', margin: 0, letterSpacing: '0.5px' }}>
+            Tài Khoản & Cài Đặt
+          </h2>
+          <div className="d-flex gap-3">
+            <button onClick={handleShowEdit} title="Cập nhật thông tin" style={{ background: '#F5F5F5', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#111111' }}>
+              <PencilSquare size={18} />
+            </button>
+            <button onClick={handleShow} title="Đổi mật khẩu" style={{ background: '#111111', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#FFFFFF' }}>
+              <Lock size={18} />
+            </button>
+          </div>
+        </div>
+
         <Row>
-          <Col>
-            <Form onSubmit={handleSubmit}>
-              <h4 className="text-center mb-4">Thông tin tài khoản</h4>
-              <Row>
-                <Col md={6}>
-                  <Form.Label>Họ và tên</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="full_name"
-                    value={formData.full_name}
-                    onChange={handleInputChange}
-                    isInvalid={!!errors.full_name}
-                    placeholder="Họ và tên"
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {errors.full_name}
-                  </Form.Control.Feedback>
+          <Col lg={12}>
+            <div style={{ marginBottom: '48px', backgroundColor: '#FAFAFA', padding: '32px', borderRadius: '16px' }}>
+              <Row className="mb-4">
+                <Col md={6} className="mb-4">
+                  <p style={{ color: '#707072', fontSize: '12px', textTransform: 'uppercase', fontWeight: '500', margin: '0 0 8px 0' }}>Họ và tên</p>
+                  <p style={{ fontSize: '18px', fontWeight: '500', color: '#111111', margin: 0 }}>{userData?.fullName || "Chưa cập nhật"}</p>
                 </Col>
-                <Col md={6}>
-                  <Form.Label>Email</Form.Label>
-                  <Form.Control
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    isInvalid={!!errors.email}
-                    placeholder="Email"
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {errors.email}
-                  </Form.Control.Feedback>
-                </Col>
-                <Col md={6}>
-                  <Form.Label>Số điện thoại</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    isInvalid={!!errors.phone}
-                    placeholder="Số điện thoại"
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {errors.phone}
-                  </Form.Control.Feedback>
-                </Col>
-                <Col md={6}>
-                  <Form.Label>Ngày Sinh</Form.Label>
-                  <Form.Control
-                    type="date"
-                    name="dob"
-                    value={formData.dob}
-                    onChange={handleInputChange}
-                    isInvalid={!!errors.dob}
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {errors.dob}
-                  </Form.Control.Feedback>
-                </Col>
-                <Col md={6}>
-                  <Form.Label>Địa chỉ</Form.Label>
-                  <Form.Control
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    isInvalid={!!errors.address}
-                    placeholder="Nhập địa chỉ của bạn"
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {errors.address}
-                  </Form.Control.Feedback>
-                </Col>
-                <Col md={6}>
-                  <Form.Label>Giới tính</Form.Label>
-                  <Form.Control
-                    as="select"
-                    name="gender"
-                    value={formData.gender}
-                    onChange={handleInputChange}
-                    isInvalid={!!errors.gender}
-                  >
-                    <option value="">Chọn giới tính</option>
-                    <option value="Nam">Nam</option>
-                    <option value="Nữ">Nữ</option>
-                    <option value="Khác">Khác</option>
-                  </Form.Control>
-                  <Form.Control.Feedback type="invalid">
-                    {errors.gender}
-                  </Form.Control.Feedback>
-                </Col>
-              </Row>
 
-              <Row style={{ marginTop: "2rem" }}>
-                <Col>
-                  <button 
-                    type="button"
-                    onClick={handleShow}
-                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "inherit", textDecoration: "underline" }}
-                  >
-                    <Lock size={18} /> Đổi mật khẩu
-                  </button>
+                <Col md={6} className="mb-4">
+                  <p style={{ color: '#707072', fontSize: '12px', textTransform: 'uppercase', fontWeight: '500', margin: '0 0 8px 0' }}>Email</p>
+                  <p style={{ fontSize: '18px', fontWeight: '500', color: '#111111', margin: 0 }}>{userData?.email}</p>
                 </Col>
-              </Row>
 
-              <Row className="d-flex justify-content-center" style={{ marginTop: "2rem" }}>
-                <Col xs="auto">
-                  <Button
-                    style={{ width: "8rem", background: "#2891d3" }}
-                    type="submit"
-                    disabled={updating}
-                  >
-                    {updating ? "Đang cập nhật..." : "Cập nhật"}
-                  </Button>
+                <Col md={6} className="mb-4">
+                  <p style={{ color: '#707072', fontSize: '12px', textTransform: 'uppercase', fontWeight: '500', margin: '0 0 8px 0' }}>Số điện thoại</p>
+                  <p style={{ fontSize: '18px', fontWeight: '500', color: '#111111', margin: 0 }}>{userData?.phone || "Chưa cập nhật"}</p>
+                </Col>
+
+                <Col md={6} className="mb-4">
+                  <p style={{ color: '#707072', fontSize: '12px', textTransform: 'uppercase', fontWeight: '500', margin: '0 0 8px 0' }}>Giới tính</p>
+                  <p style={{ fontSize: '18px', fontWeight: '500', color: '#111111', margin: 0 }}>
+                    {userData?.gender === "MALE" ? "Nam" : userData?.gender === "FEMALE" ? "Nữ" : userData?.gender === "OTHER" ? "Khác" : "Chưa cập nhật"}
+                  </p>
                 </Col>
               </Row>
-            </Form>
+            </div>
           </Col>
         </Row>
-        <Row style={{ marginTop: "2rem" }}>
-          <div style={{ backgroundColor: '#f8f9fa', padding: '20px' }}>
-            <h2 style={{ color: '#343a40' }}>Lịch Sử Dặt Vé</h2>
 
-            <InputGroup className="mb-3">
-              <FormControl
-                placeholder="Tìm kiếm theo ID vé, Tên phim, Rạp, Ghế, Ngày"
-                aria-label="Search"
-                aria-describedby="basic-addon2"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </InputGroup>
-            <Table striped bordered hover responsive>
-              <thead className="table-dark">
-                <tr>
-                  <th>Mã Vé</th>
-                  <th>Phim</th>
-                  <th>Rạp</th>
-                  <th>Ghế</th>
-                  <th>Ngày</th>
-                  <th>Thời gian</th>
-                  <th>Tổng giá</th>
-                  <th>Trạng thái</th>
-                </tr>
-              </thead>
-              <tbody>
-                {accounts.length > 0 ? (
-                  accounts.filter(filterTickets).map(ticket => (
-                    <tr key={ticket.id}>
-                      <td>{ticket.id}</td>
-                      <td>{ticket.movie}</td>
-                      <td>{ticket.cinema}</td>
-                      <td>{ticket.seats.join(", ")}</td>
-                      <td>{ticket.date}</td>
-                      <td>{ticket.startTime} - {ticket.endTime}</td>
-                      <td>{formatCurrency(ticket.totalPrice)}</td>
-                      <td>
-                        <span className={`badge ${ticket.status === 'active' ? 'bg-success' : 'bg-danger'}`}>
-                          {ticket.status === 'active' ? 'Đã thanh toán' : 'Chưa thanh toán'}
-                        </span>
-                      </td>
+        <Row>
+          <Col lg={12}>
+            <div style={{ paddingTop: '32px', borderTop: '1px solid #111111' }}>
+              <h2 style={{ fontFamily: 'Helvetica, sans-serif', fontWeight: '700', fontSize: '24px', textTransform: 'uppercase', color: '#111111', marginBottom: '24px' }}>
+                Lịch Sử Đặt Vé
+              </h2>
+
+              <InputGroup className="mb-4">
+                <FormControl
+                  placeholder="Tìm kiếm mã vé, rạp, hoặc tên phim..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{ borderRadius: '24px', padding: '12px 24px', backgroundColor: '#FAFAFA', border: '1px solid #CACACB' }}
+                />
+              </InputGroup>
+
+              <div style={{ overflowX: 'auto' }}>
+                <Table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ backgroundColor: '#FFFFFF', color: '#707072', fontWeight: '500', textTransform: 'uppercase', fontSize: '14px', padding: '16px', borderBottom: '2px solid #111111', textAlign: 'left' }}>Mã Chuyến</th>
+                      <th style={{ backgroundColor: '#FFFFFF', color: '#707072', fontWeight: '500', textTransform: 'uppercase', fontSize: '14px', padding: '16px', borderBottom: '2px solid #111111', textAlign: 'left' }}>Phim</th>
+                      <th style={{ backgroundColor: '#FFFFFF', color: '#707072', fontWeight: '500', textTransform: 'uppercase', fontSize: '14px', padding: '16px', borderBottom: '2px solid #111111', textAlign: 'left' }}>Địa Điểm</th>
+                      <th style={{ backgroundColor: '#FFFFFF', color: '#707072', fontWeight: '500', textTransform: 'uppercase', fontSize: '14px', padding: '16px', borderBottom: '2px solid #111111', textAlign: 'left' }}>Tổng Giá</th>
+                      <th style={{ backgroundColor: '#FFFFFF', color: '#707072', fontWeight: '500', textTransform: 'uppercase', fontSize: '14px', padding: '16px', borderBottom: '2px solid #111111', textAlign: 'left' }}>Trạng Thái</th>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="8" className="text-center">Không có vé nào.</td>
-                  </tr>
-                )}
-              </tbody>
-            </Table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {tickets.length > 0 ? (
+                      tickets.filter(filterTickets).map(ticket => (
+                        <tr key={ticket.id} style={{ borderBottom: '1px solid #E5E5E5' }}>
+                          <td style={{ padding: '16px', fontWeight: '500' }}>#{ticket.bookingCode}</td>
+                          <td style={{ padding: '16px' }}>{ticket.movieTitle}</td>
+                          <td style={{ padding: '16px' }}>{ticket.cinemaName}</td>
+                          <td style={{ padding: '16px', fontWeight: '500' }}>{formatCurrency(ticket.totalPrice)}</td>
+                          <td style={{ padding: '16px' }}>
+                            <span style={{ color: ticket.status === 'PAID' ? '#007D48' : '#D30005', fontWeight: '500', backgroundColor: ticket.status === 'PAID' ? '#DFFFB9' : '#FFE5E5', padding: '4px 12px', borderRadius: '30px', fontSize: '12px' }}>
+                              {ticket.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="5" style={{ padding: '32px', textAlign: 'center', color: '#707072' }}>Chưa có lịch sử đặt vé nào.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </Table>
+              </div>
+            </div>
+          </Col>
         </Row>
       </Container>
 
-      <Modal show={show} onHide={handleClose} centered size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Thay đổi mật khẩu</Modal.Title>
+
+      {/* MODAL CẬP NHẬT THÔNG TIN */}
+      <Modal show={showEdit} onHide={handleCloseEdit} centered>
+        <Modal.Header closeButton style={{ borderBottom: 'none' }}>
+          <Modal.Title style={{ textTransform: 'uppercase', fontWeight: '700', fontSize: '20px' }}>CẬP NHẬT THÔNG TIN</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleSubmit}>
+            <Form.Group className="mb-4">
+              <Form.Label style={{ color: '#707072', fontSize: '14px', textTransform: 'uppercase', fontWeight: '500' }}>Họ và tên</Form.Label>
+              <Form.Control
+                type="text"
+                name="full_name"
+                value={formData.full_name}
+                onChange={handleInputChange}
+                isInvalid={!!errors.full_name}
+                style={{ borderRadius: '8px', border: '1px solid #CACACB', padding: '12px 16px', backgroundColor: '#FAFAFA' }}
+              />
+              <Form.Control.Feedback type="invalid">{errors.full_name}</Form.Control.Feedback>
+            </Form.Group>
+
+            <Form.Group className="mb-4">
+              <Form.Label style={{ color: '#707072', fontSize: '14px', textTransform: 'uppercase', fontWeight: '500' }}>Số điện thoại</Form.Label>
+              <Form.Control
+                type="text"
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                style={{ borderRadius: '8px', border: '1px solid #CACACB', padding: '12px 16px', backgroundColor: '#FAFAFA' }}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-4">
+              <Form.Label style={{ color: '#707072', fontSize: '14px', textTransform: 'uppercase', fontWeight: '500' }}>Giới tính</Form.Label>
+              <Form.Control
+                as="select"
+                name="gender"
+                value={formData.gender}
+                onChange={handleInputChange}
+                style={{ borderRadius: '8px', border: '1px solid #CACACB', padding: '12px 16px', backgroundColor: '#FAFAFA' }}
+              >
+                <option value="">Chọn giới tính</option>
+                <option value="MALE">Nam</option>
+                <option value="FEMALE">Nữ</option>
+                <option value="OTHER">Khác</option>
+              </Form.Control>
+            </Form.Group>
+
+            <Button
+              type="submit"
+              disabled={updating}
+              style={{ width: "100%", background: "#111111", border: "none", borderRadius: "30px", padding: "12px", fontSize: "16px", fontWeight: "500" }}
+            >
+              {updating ? "ĐANG LƯU..." : "LƯU THAY ĐỔI"}
+            </Button>
+          </Form>
+        </Modal.Body>
+      </Modal>
+
+      {/* MODAL ĐỔI MẬT KHẨU */}
+      <Modal show={show} onHide={handleClose} centered>
+        <Modal.Header closeButton style={{ borderBottom: 'none' }}>
+          <Modal.Title style={{ textTransform: 'uppercase', fontWeight: '700', fontSize: '20px' }}>THAY ĐỔI MẬT KHẨU</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form onSubmit={handlePasswordSubmit}>
-            <Row className="mb-3">
-              <Col md={5}>
-                <Form.Label>Mật khẩu hiện tại</Form.Label>
-              </Col>
-              <Col md={7}>
-                <Form.Control
-                  type="password"
-                  name="currentPassword"
-                  value={passwordData.currentPassword}
-                  onChange={handlePasswordChange}
-                  isInvalid={!!errors.currentPassword}
-                  placeholder="Nhập mật khẩu hiện tại"
-                  autoFocus
-                />
-                <Form.Control.Feedback type="invalid">
-                  {errors.currentPassword}
-                </Form.Control.Feedback>
-              </Col>
-            </Row>
-            <Row className="mb-3">
-              <Col md={5}>
-                <Form.Label>Mật khẩu mới</Form.Label>
-              </Col>
-              <Col md={7}>
-                <Form.Control
-                  type="password"
-                  name="newPassword"
-                  value={passwordData.newPassword}
-                  onChange={handlePasswordChange}
-                  isInvalid={!!errors.newPassword}
-                  placeholder="Nhập mật khẩu mới"
-                />
-                <Form.Control.Feedback type="invalid">
-                  {errors.newPassword}
-                </Form.Control.Feedback>
-              </Col>
-            </Row>
-            <Row className="mb-3">
-              <Col md={5}>
-                <Form.Label>Xác nhận mật khẩu mới</Form.Label>
-              </Col>
-              <Col md={7}>
-                <Form.Control
-                  type="password"
-                  name="confirmPassword"
-                  value={passwordData.confirmPassword}
-                  onChange={handlePasswordChange}
-                  isInvalid={!!errors.confirmPassword}
-                  placeholder="Nhập xác nhận mật khẩu mới"
-                />
-                <Form.Control.Feedback type="invalid">
-                  {errors.confirmPassword}
-                </Form.Control.Feedback>
-              </Col>
-            </Row>
-            <Row>
-              <Col>
-                <Button
-                  variant="primary"
-                  style={{ width: "8rem", background: "#2891d3" }}
-                  type="submit"
-                  disabled={updating}
-                >
-                  {updating ? "Đang cập nhật..." : "Cập nhật"}
-                </Button>
-              </Col>
-            </Row>
+            <Form.Group className="mb-4">
+              <Form.Label style={{ color: '#707072', fontSize: '14px', textTransform: 'uppercase', fontWeight: '500' }}>Mật khẩu hiện tại</Form.Label>
+              <Form.Control
+                type="password"
+                name="oldPassword"
+                value={passwordData.oldPassword}
+                onChange={handlePasswordChange}
+                isInvalid={!!errors.oldPassword}
+                style={{ borderRadius: '8px', border: '1px solid #CACACB', padding: '12px 16px', backgroundColor: '#FAFAFA' }}
+              />
+              <Form.Control.Feedback type="invalid">
+                {errors.oldPassword}
+              </Form.Control.Feedback>
+            </Form.Group>
+            <Form.Group className="mb-4">
+              <Form.Label style={{ color: '#707072', fontSize: '14px', textTransform: 'uppercase', fontWeight: '500' }}>Mật khẩu mới</Form.Label>
+              <Form.Control
+                type="password"
+                name="newPassword"
+                value={passwordData.newPassword}
+                onChange={handlePasswordChange}
+                isInvalid={!!errors.newPassword}
+                style={{ borderRadius: '8px', border: '1px solid #CACACB', padding: '12px 16px', backgroundColor: '#FAFAFA' }}
+              />
+              <Form.Control.Feedback type="invalid">
+                {errors.newPassword}
+              </Form.Control.Feedback>
+            </Form.Group>
+            <Form.Group className="mb-4">
+              <Form.Label style={{ color: '#707072', fontSize: '14px', textTransform: 'uppercase', fontWeight: '500' }}>
+                Xác nhận mật khẩu
+              </Form.Label>
+              <Form.Control
+                type="password"
+                name="confirmPassword"
+                value={passwordData.confirmPassword}
+                onChange={handlePasswordChange}
+                isInvalid={!!errors.confirmPassword}
+                style={{ borderRadius: '8px', border: '1px solid #CACACB', padding: '12px 16px', backgroundColor: '#FAFAFA' }}
+              />
+              <Form.Control.Feedback type="invalid">
+                {errors.confirmPassword}
+              </Form.Control.Feedback>
+            </Form.Group>
+            <Button
+              type="submit"
+              disabled={updating}
+              style={{ width: "100%", background: "#111111", border: "none", borderRadius: "30px", padding: "12px", fontSize: "16px", fontWeight: "500" }}
+            >
+              {updating ? "ĐANG XỬ LÝ..." : "CẬP NHẬT MẬT KHẨU"}
+            </Button>
           </Form>
         </Modal.Body>
       </Modal>
 
       <Modal centered show={showSuccessModal} onHide={handleModalClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>Thông báo</Modal.Title>
+        <Modal.Header closeButton style={{ borderBottom: 'none' }}>
+          <Modal.Title style={{ fontWeight: '700' }}>Thông báo</Modal.Title>
         </Modal.Header>
-        <Modal.Body>{successMessage}</Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleModalClose}>
+        <Modal.Body style={{ color: '#111111' }}>{successMessage}</Modal.Body>
+        <Modal.Footer style={{ borderTop: 'none' }}>
+          <Button style={{ background: "#111111", border: "none", borderRadius: "30px", padding: "8px 24px" }} onClick={handleModalClose}>
             Đóng
           </Button>
         </Modal.Footer>
       </Modal>
     </div>
-
   );
 }
 

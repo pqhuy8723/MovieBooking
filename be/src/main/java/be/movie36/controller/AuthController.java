@@ -13,6 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.HttpHeaders;
+import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -32,26 +35,29 @@ public class AuthController {
 
     // POST /api/auth/login
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
         AuthResponse data = authService.login(request);
+        setCookies(response, data.getAccessToken(), data.getRefreshToken());
         return ResponseEntity.ok(ApiResponse.success(Message.LOGIN_SUCCESS, data));
     }
 
     // POST /api/auth/logout
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal UserDetails userDetails, HttpServletResponse response) {
 
         authService.logout(userDetails.getUsername());
+        clearCookies(response);
         return ResponseEntity.ok(ApiResponse.success(Message.LOGOUT_SUCCESS));
     }
 
     // POST /api/auth/refresh
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<AuthResponse>> refresh(
-            @Valid @RequestBody RefreshTokenRequest request) {
+            @Valid @RequestBody RefreshTokenRequest request, HttpServletResponse response) {
 
         AuthResponse data = authService.refreshToken(request);
+        setCookies(response, data.getAccessToken(), data.getRefreshToken());
         return ResponseEntity.ok(ApiResponse.success(Message.REFRESH_SUCCESS, data));
     }
 
@@ -81,6 +87,44 @@ public class AuthController {
         passwordResetService.resetPassword(request);
         return ResponseEntity.ok(
                 ApiResponse.success("Đặt lại mật khẩu thành công, vui lòng đăng nhập lại"));
+    }
+
+    private void setCookies(HttpServletResponse response, String accessToken, String refreshToken) {
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", accessToken)
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(900)
+                .build();
+
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(7 * 24 * 60 * 60)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+    }
+
+    private void clearCookies(HttpServletResponse response) {
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0) // Expire immediately
+                .build();
+
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
     }
 
 }

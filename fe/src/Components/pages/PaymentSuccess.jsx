@@ -1,71 +1,40 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { Modal, Button } from "react-bootstrap";
+import { useEffect } from "react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import "../../CSS/Nike.css";
 
 function PaymentSuccess() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const bookingCode = searchParams.get("booking_code");
-  const [showModal, setShowModal] = useState(true);
 
   useEffect(() => {
-    // Xóa booking code khỏi sessionStorage sau khi hiển thị
-    if (bookingCode) {
-      sessionStorage.removeItem("booking_code");
-    }
+    if (bookingCode) sessionStorage.removeItem("booking_code");
   }, [bookingCode]);
 
-  const handleClose = () => {
-    setShowModal(false);
-    navigate("/");
-  };
-
   return (
-    <div style={{ 
-      display: "flex", 
-      justifyContent: "center", 
-      alignItems: "center", 
-      minHeight: "60vh",
-      padding: "20px"
-    }}>
-      <Modal show={showModal} onHide={handleClose} centered>
-        <Modal.Header closeButton>
-          <Modal.Title style={{ color: "#28a745" }}>
-            Thanh toán thành công!
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div style={{ textAlign: "center", padding: "20px" }}>
-            <div style={{ 
-              fontSize: "48px", 
-              color: "#28a745", 
-              marginBottom: "20px" 
-            }}>
-              
+    <div className="nike-payment-wrap">
+      <div className="nike-payment-card">
+        <span className="nike-payment-icon">✅</span>
+        <h1 className="nike-h1" style={{ marginBottom: '16px' }}>THANH TOÁN THÀNH CÔNG</h1>
+        <p className="nike-body" style={{ color: '#707072', marginBottom: '8px' }}>
+          Cảm ơn bạn đã đặt vé!
+        </p>
+        {bookingCode && (
+          <div style={{ background: '#F5F5F5', borderRadius: '8px', padding: '16px 24px', margin: '24px 0', display: 'inline-block' }}>
+            <span style={{ fontSize: '12px', fontWeight: '500', textTransform: 'uppercase', color: '#707072', letterSpacing: '0.08em' }}>Mã đặt vé</span>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#111111', letterSpacing: '2px', marginTop: '4px' }}>
+              {bookingCode}
             </div>
-            <h3 style={{ color: "#333", marginBottom: "15px" }}>
-              Cảm ơn bạn đã thanh toán!
-            </h3>
-            {bookingCode && (
-              <p style={{ fontSize: "16px", color: "#555", marginBottom: "10px" }}>
-                <strong>Mã đặt vé:</strong> {bookingCode}
-              </p>
-            )}
-            <p style={{ fontSize: "16px", color: "#555", marginBottom: "20px" }}>
-              Thông tin vé đã được gửi về email của bạn. 
-              Vui lòng kiểm tra email để xem chi tiết vé đã đặt.
-            </p>
-            <p style={{ fontSize: "14px", color: "#777" }}>
-              Bạn có thể xem lại vé trong trang cá nhân của mình.
-            </p>
           </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="primary" onClick={handleClose}>
-            Về trang chủ
-          </Button>
-        </Modal.Footer>
-      </Modal>
+        )}
+        <p className="nike-caption" style={{ marginBottom: '32px' }}>
+          Thông tin vé đã được gửi về email của bạn. Vui lòng kiểm tra để xem chi tiết.
+        </p>
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+          <Link to="/" className="btn-nike-primary">Về trang chủ</Link>
+          <Link to="/profile/me" className="btn-nike-secondary">Xem vé của tôi</Link>
+        </div>
+      </div>
     </div>
   );
 }

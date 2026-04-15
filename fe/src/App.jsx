@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Header from "./Components/pages/Header";
-import Footer from "./Components/pages/Footer";
+import UserLayout from "./Components/layout/UserLayout";
+import AdminLayout from "./Components/layout/AdminLayout";
 import CinemaInfo from "./Components/pages/CinemaInfo";
 import TicketPricing from "./Components/pages/TicketPricing";
 import LoginRegister from "./Components/pages/LoginRegister.jsx";
@@ -28,37 +28,40 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <Header />
         <Routes>
-          <Route path="/login" element={<LoginRegister />} />
-          <Route path="*" element={<Page404 />} />
-          <Route path="/" element={<HomePage />} />
-          <Route path="/movie/:id" element={<MovieDetail />} />
-          <Route path="/info" element={<CinemaInfo />} />
-          <Route path="/price" element={<TicketPricing />} />
-          <Route path="/showtime" element={<ShowTime />} />
-          <Route path="/movie" element={<MoviePage />} />
-          <Route path="/payment-success" element={<PaymentSuccess />} />
-          <Route path="/payment-failure" element={<PaymentFailure />} />
+          {/* User Routes */}
+          <Route element={<UserLayout />}>
+            <Route path="/login" element={<LoginRegister />} />
+            <Route path="*" element={<Page404 />} />
+            <Route path="/" element={<HomePage />} />
+            <Route path="/movie/:id" element={<MovieDetail />} />
+            <Route path="/info" element={<CinemaInfo />} />
+            <Route path="/price" element={<TicketPricing />} />
+            <Route path="/showtime" element={<ShowTime />} />
+            <Route path="/movie" element={<MoviePage />} />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/payment-failure" element={<PaymentFailure />} />
+
+            {/* User Protected Routes */}
+            <Route element={<ProtectedRoute allowedRoles={["ADMIN", "USER"]} />}>
+              <Route path="/booking/:id" element={<Booking />} />
+              <Route path="/profile/:id" element={<UserProfile />} />
+            </Route>
+          </Route>
 
           {/* Admin Routes */}
-          <Route element={<ProtectedRoute allowedRoles={["1"]} />}>
-            <Route path="/account" element={<AccountManager />} />
-            <Route path="/managermovies" element={<AdminMovies />} />
-            <Route path="/languages" element={<LanguagesManager />} />
-            <Route path="/genres" element={<GenresManager />} />
-            <Route path="/movietypes" element={<MovieTypesManager />} />
-            <Route path="/screens" element={<ScreensManager />} />
-            <Route path="/tickets" element={<TicketManagement />} />
-          </Route>
-
-          {/* User & Admin Routes */}
-          <Route element={<ProtectedRoute allowedRoles={["1", "2"]} />}>
-            <Route path="/booking/:id" element={<Booking />} />
-            <Route path="/profile/:id" element={<UserProfile />} />
+          <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
+            <Route element={<AdminLayout />}>
+              <Route path="/account" element={<AccountManager />} />
+              <Route path="/managermovies" element={<AdminMovies />} />
+              <Route path="/languages" element={<LanguagesManager />} />
+              <Route path="/genres" element={<GenresManager />} />
+              <Route path="/movietypes" element={<MovieTypesManager />} />
+              <Route path="/screens" element={<ScreensManager />} />
+              <Route path="/tickets" element={<TicketManagement />} />
+            </Route>
           </Route>
         </Routes>
-        <Footer />
       </Router>
     </AuthProvider>
   );

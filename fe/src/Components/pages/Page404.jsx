@@ -1,17 +1,16 @@
-import "../../CSS/Page404.css";
+import React from "react";
+import { Link } from "react-router-dom";
+import "../../CSS/Nike.css";
+
 function Page404() {
   return (
-    <>
-      <div class="container-page404">
-        <div class="error-message">
-          <h1>404</h1>
-          <p>Trang bạn tìm không tồn tại.</p>
-          <a href="/" class="home-link">
-            Quay lại trang chủ
-          </a>
-        </div>
-      </div>
-    </>
+    <div className="nike-404">
+      <h1>404</h1>
+      <p>Trang bạn tìm kiếm không tồn tại.</p>
+      <Link to="/" className="btn-nike-primary">
+        Về trang chủ
+      </Link>
+    </div>
   );
 }
 

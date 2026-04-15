@@ -1,295 +1,176 @@
 import React, { useEffect, useState } from "react";
-import "../../CSS/MovieDetail.css";
 import { useParams, useNavigate } from "react-router-dom";
-import { Modal, Button, Table } from "react-bootstrap";
-import { IoTicketOutline } from "react-icons/io5";
+import { Modal } from "react-bootstrap";
+import "../../CSS/Nike.css";
+
 const MovieDetail = () => {
   const { id } = useParams();
   const [movie, setMovie] = useState(null);
   const [genres, setGenres] = useState([]);
   const [languages, setLanguages] = useState([]);
-  const [cinema, setCinema] = useState([]);
+  const [cinema, setCinema] = useState({});
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedShowtime, setSelectedShowtime] = useState(null);
   const navigate = useNavigate();
-  const handleBookTicket = () => {
-    if (selectedShowtime) {
-      navigate(`/booking/${movie.id}`, {
-        state: { showtimeId: selectedShowtime.id },
-      });
-    }
-  };
-  const handleShowtimeClick = (showtime) => {
-    setSelectedShowtime(showtime);
-  };
-
-  const handleCloseModal = () => {
-    setSelectedShowtime(null);
-  };
 
   useEffect(() => {
     setMovie({
-      id: "M1",
-      title: "Phim Dummy Detail",
-      description: "Mo ta chi tiet phim dummy",
-      director: "Director Dummy",
-      actor: "Actor A, Actor B",
-      genre_ids: [1],
-      duration: 120,
-      language_id: 1,
+      id, title: "Avengers: Secret Wars",
+      description: "Sự kiện vũ trụ Marvel lớn nhất từ trước đến nay. Các siêu anh hùng phải đối mặt với mối đe dọa tàn khốc đến từ đa vũ trụ.",
+      director: "Anthony & Joe Russo",
+      actor: "Robert Downey Jr., Chris Evans, Scarlett Johansson",
+      genre_ids: [1, 2], duration: 148, language_id: 1,
       release_date: "2026-05-01",
-      poster: "https://via.placeholder.com/200x300",
+      poster: "https://via.placeholder.com/400x600/111111/FFFFFF?text=AVENGERS",
       video_url: "https://www.youtube.com/embed/tgbNymZ7vqY",
       showtimes: [
-        { id: "S1", date: "2026-05-15", start_time: "10:00:00", end_time: "12:00:00", price: 50000 },
-        { id: "S2", date: "2026-05-15", start_time: "14:00:00", end_time: "16:00:00", price: 55000 }
+        { id: "S1", date: "2026-05-15", start_time: "10:00:00", price: 80000 },
+        { id: "S2", date: "2026-05-15", start_time: "14:30:00", price: 85000 },
+        { id: "S3", date: "2026-05-16", start_time: "19:00:00", price: 90000 },
+        { id: "S4", date: "2026-05-16", start_time: "21:30:00", price: 95000 },
       ]
     });
-    setGenres([{ id: 1, name: "Hành Động" }]);
+    setGenres([{ id: 1, name: "Hành Động" }, { id: 2, name: "Phiêu Lưu" }]);
     setLanguages([{ id: 1, name: "Tiếng Việt" }]);
-    setCinema({ name: "Cinema Dummy 1" });
+    setCinema({ name: "Movie 36 Cinema" });
+    setSelectedDate("2026-05-15");
   }, [id]);
 
-  // Helper function to check if showtime has passed
-  const isShowtimePassedForEffect = (showtime) => {
-    const now = new Date();
-    const showtimeDate = new Date(showtime.date);
-    const showtimeTime = showtime.start_time.split(":").map(Number);
-    
-    const showtimeDateTime = new Date(showtimeDate);
-    showtimeDateTime.setHours(showtimeTime[0], showtimeTime[1], showtimeTime[2] || 0, 0);
-    
-    return showtimeDateTime < now;
-  };
-
-  useEffect(() => {
-    if (movie?.showtimes?.length > 0) {
-      // Get the earliest date that has at least one valid (not passed) showtime
-      const validShowtimes = movie.showtimes.filter(
-        (showtime) => !isShowtimePassedForEffect(showtime)
-      );
-      
-      if (validShowtimes.length > 0) {
-        const earliestDate = validShowtimes
-          .map((showtime) => showtime.date)
-          .sort()[0];
-        setSelectedDate(earliestDate);
-      }
-    }
-  }, [movie]);
-
-  if (!movie) {
-    return <p>Loading movie details...</p>;
-  }
-
-  const getGenreNames = (genreIds) =>
-    genreIds
-      .map((id) => genres.find((genre) => genre.id === id)?.name)
-      .join(", ");
-
-  const getLanguageName = (languageId) =>
-    languages.find((language) => language.id === languageId)?.name;
-
-  const handleDateClick = (date) => {
-    setSelectedDate(date);
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("vi-VN", {
-      weekday: "long",
-      day: "2-digit",
-      month: "2-digit",
-    });
-  };
-
-  const formatTime = (timeString) => {
-    const [hours, minutes, seconds] = timeString.split(":").map(Number);
-    const time = new Date();
-    time.setHours(hours, minutes, seconds, 0);
-    return time.toLocaleTimeString("vi-VN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-  };
-
-  // Helper function to check if showtime has passed
-  const isShowtimePassed = (showtime) => {
-    const now = new Date();
-    const showtimeDate = new Date(showtime.date);
-    const showtimeTime = showtime.start_time.split(":").map(Number);
-    
-    // Set showtime datetime
-    const showtimeDateTime = new Date(showtimeDate);
-    showtimeDateTime.setHours(showtimeTime[0], showtimeTime[1], showtimeTime[2] || 0, 0);
-    
-    // Compare with current time
-    return showtimeDateTime < now;
-  };
-
-  const filteredShowtimes = movie.showtimes.filter(
-    (showtime) => showtime.date === selectedDate && !isShowtimePassed(showtime)
+  if (!movie) return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+      <div className="spinner-border text-dark" role="status" />
+    </div>
   );
 
-  return (
-    <div className="movie-detail">
-      <main className="content">
-        <div className="breadcrumb" style={{ fontSize: "1.5rem" }}>
-          <button type="button" onClick={() => window.location.href = '/'} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "inherit", textDecoration: "underline" }}>Home</button> &gt;{" "}
-          <span className="highlight">{movie.title}</span>
-        </div>
+  const getGenreNames = ids => ids.map(id => genres.find(g => g.id === id)?.name).filter(Boolean).join(" · ");
+  const getLangName = lid => languages.find(l => l.id === lid)?.name;
+  const formatDate = s => new Date(s).toLocaleDateString("vi-VN", { weekday: "long", day: "2-digit", month: "2-digit" });
+  const formatTime = t => {
+    const [h, m] = t.split(":").map(Number);
+    const d = new Date(); d.setHours(h, m, 0);
+    return d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false });
+  };
 
-        <div className="movie-info">
-          <div className="posters">
+  const uniqueDates = [...new Set(movie.showtimes.map(s => s.date))].sort();
+  const filteredShowtimes = movie.showtimes.filter(s => s.date === selectedDate);
+
+  const metaItems = [
+    { label: "Đạo diễn", value: movie.director },
+    { label: "Diễn viên", value: movie.actor },
+    { label: "Thể loại", value: getGenreNames(movie.genre_ids) },
+    { label: "Thời lượng", value: `${movie.duration} phút` },
+    { label: "Ngôn ngữ", value: getLangName(movie.language_id) },
+    { label: "Khởi chiếu", value: movie.release_date },
+  ];
+
+  return (
+    <div style={{ fontFamily: 'Helvetica, Arial, sans-serif', background: '#FFFFFF', minHeight: '80vh' }}>
+      {/* Breadcrumb */}
+      <div style={{ background: '#F5F5F5', padding: '12px 48px', borderBottom: '1px solid #E5E5E5' }}>
+        <button onClick={() => navigate('/movie')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#707072', fontSize: '14px', fontWeight: '500', padding: 0 }}>
+          ← Danh sách phim
+        </button>
+      </div>
+
+      {/* Main content */}
+      <div className="nike-page" style={{ paddingTop: '48px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '64px', alignItems: 'start' }}>
+          {/* Poster */}
+          <div>
             <img
               src={movie.poster}
-              alt={`${movie.title} Poster`}
-              className="poster-image"
+              alt={movie.title}
+              style={{ width: '100%', borderRadius: '0', display: 'block' }}
             />
           </div>
 
-          <div className="details">
-            <h1>{movie.title}</h1>
-            <p>{movie.description}</p>
-            <ul className="list-unstyled row">
-              <li className="col-md-3 col-sm-5">
-                <strong>ĐẠO DIỄN:</strong>
-              </li>
-              <li className="col-md-9 col-sm-7">{movie.director}</li>
+          {/* Info */}
+          <div>
+            <h1 style={{ fontSize: '40px', fontWeight: '700', textTransform: 'uppercase', color: '#111111', lineHeight: '1.1', marginBottom: '16px' }}>
+              {movie.title}
+            </h1>
+            <p style={{ fontSize: '16px', color: '#707072', lineHeight: '1.75', marginBottom: '32px' }}>
+              {movie.description}
+            </p>
 
-              <li className="col-md-3 col-sm-5">
-                <strong>DIỄN VIÊN:</strong>
-              </li>
-              <li className="col-md-9 col-sm-7">{movie.actor}</li>
-
-              <li className="col-md-3 col-sm-5">
-                <strong>THỂ LOẠI:</strong>
-              </li>
-              <li className="col-md-9 col-sm-7">
-                {getGenreNames(movie.genre_ids)}
-              </li>
-
-              <li className="col-md-3 col-sm-5">
-                <strong>THỜI LƯỢNG:</strong>
-              </li>
-              <li className="col-md-9 col-sm-7">{movie.duration} phút</li>
-
-              <li className="col-md-3 col-sm-5">
-                <strong>NGÔN NGỮ:</strong>
-              </li>
-              <li className="col-md-9 col-sm-7">
-                {getLanguageName(movie.language_id)}
-              </li>
-
-              <li className="col-md-3 col-sm-5">
-                <strong>NGÀY KHỞI CHIẾU:</strong>
-              </li>
-              <li className="col-md-9 col-sm-7">{movie.release_date}</li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="container">
-          <div className="date-selector">
-            {movie.showtimes
-              .map((s) => s.date)
-              .filter((value, index, self) => self.indexOf(value) === index)
-              .filter((date) => {
-                // Filter out dates that have no valid showtimes (all showtimes have passed)
-                const showtimesForDate = movie.showtimes.filter(
-                  (st) => st.date === date && !isShowtimePassed(st)
-                );
-                return showtimesForDate.length > 0;
-              })
-              .sort((a, b) => new Date(a) - new Date(b))
-              .map((date) => (
-                <div
-                  key={date}
-                  className={`date-item ${
-                    selectedDate === date ? "active" : ""
-                  }`}
-                  onClick={() => handleDateClick(date)}
-                >
-                  {formatDate(date)}
+            {/* Meta grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 32px', marginBottom: '40px', borderTop: '1px solid #E5E5E5', paddingTop: '32px' }}>
+              {metaItems.map((item, i) => (
+                <div key={i}>
+                  <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#9E9EA0', marginBottom: '4px' }}>{item.label}</div>
+                  <div style={{ fontSize: '15px', fontWeight: '500', color: '#111111' }}>{item.value}</div>
                 </div>
               ))}
-          </div>
+            </div>
 
-          <div className="schedule">
-            <h2>{getLanguageName(movie.language_id)}</h2>
-            {filteredShowtimes.length > 0 ? (
-              <div className="time-slot">
-                {filteredShowtimes.map((showtime) => (
-                  <div
-                    key={showtime.id}
-                    className="time-box"
-                    onClick={() => handleShowtimeClick(showtime)}
+            {/* Showtime Picker */}
+            <div style={{ borderTop: '2px solid #111111', paddingTop: '32px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '700', textTransform: 'uppercase', color: '#111111', marginBottom: '20px' }}>
+                Chọn suất chiếu — {cinema.name}
+              </h2>
+
+              {/* Date pills */}
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
+                {uniqueDates.map(date => (
+                  <button
+                    key={date}
+                    className={`nike-pill ${selectedDate === date ? 'active' : ''}`}
+                    onClick={() => { setSelectedDate(date); setSelectedShowtime(null); }}
+                    style={{ fontSize: '13px' }}
                   >
-                    <p>{formatTime(showtime.start_time)}</p>
-                    <span>Giá vé: {showtime.price.toLocaleString()} VNĐ</span>
-                  </div>
+                    {formatDate(date)}
+                  </button>
                 ))}
               </div>
-            ) : (
-              <p>Không có suất chiếu nào cho ngày này.</p>
-            )}
-          </div>
-          <div className="trainer">
-            <h1 className="title">TRAILER</h1>
-            <div className="video-container">
-              <iframe
-                src={movie.video_url}
-                title="Movie Trailer"
-                frameBorder="0"
-                allowFullScreen
-              ></iframe>
+
+              {/* Time slots */}
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '32px' }}>
+                {filteredShowtimes.map(s => (
+                  <button
+                    key={s.id}
+                    onClick={() => setSelectedShowtime(s)}
+                    style={{
+                      padding: '12px 20px', borderRadius: '8px', cursor: 'pointer', textAlign: 'center',
+                      border: selectedShowtime?.id === s.id ? '2px solid #111111' : '1.5px solid #CACACB',
+                      background: selectedShowtime?.id === s.id ? '#111111' : '#FAFAFA',
+                      color: selectedShowtime?.id === s.id ? 'white' : '#111111',
+                      fontWeight: '500', transition: 'all 200ms ease',
+                    }}
+                  >
+                    <div style={{ fontSize: '18px', fontWeight: '700' }}>{formatTime(s.start_time)}</div>
+                    <div style={{ fontSize: '12px', marginTop: '4px', opacity: 0.8 }}>{Number(s.price).toLocaleString()} đ</div>
+                  </button>
+                ))}
+              </div>
+
+              <button
+                className="btn-nike-primary"
+                style={{ padding: '14px 48px', fontSize: '16px', opacity: selectedShowtime ? 1 : 0.4, cursor: selectedShowtime ? 'pointer' : 'not-allowed' }}
+                disabled={!selectedShowtime}
+                onClick={() => navigate(`/booking/${movie.id}`, { state: { showtimeId: selectedShowtime?.id } })}
+              >
+                Đặt vé ngay
+              </button>
             </div>
           </div>
-          <Modal
-            show={selectedShowtime}
-            onHide={handleCloseModal}
-            centered
-            className="custom-modal"
-            size="lg"
-          >
-            <Modal.Header closeButton>
-              <Modal.Title>Bạn đang đặt vé xem phim</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              {selectedShowtime && (
-                <>
-                  <h5>{movie.title}</h5>
-                  <Table striped bordered hover>
-                    <thead>
-                      <tr>
-                        <th>Rạp chiếu</th>
-                        <th>Ngày chiếu</th>
-                        <th>Giờ chiếu</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>{cinema.name}</td>
-                        <td>{selectedShowtime.date}</td>
-                        <td>{formatTime(selectedShowtime.start_time)}</td>
-                      </tr>
-                    </tbody>
-                  </Table>
-                </>
-              )}
-            </Modal.Body>
-            <Modal.Footer>
-              <Button variant="primary" onClick={handleBookTicket}>
-                <IoTicketOutline
-                  style={{ marginRight: "8px", fontSize: "1.5rem" }}
-                />
-                Đặt vé
-              </Button>
-            </Modal.Footer>
-          </Modal>
         </div>
-      </main>
+
+        {/* Trailer */}
+        {movie.video_url && (
+          <div style={{ marginTop: '80px', borderTop: '1px solid #E5E5E5', paddingTop: '48px' }}>
+            <h2 className="nike-h1" style={{ marginBottom: '24px' }}>TRAILER</h2>
+            <div style={{ position: 'relative', paddingBottom: '56.25%', background: '#111111' }}>
+              <iframe
+                src={movie.video_url}
+                title="Trailer"
+                frameBorder="0"
+                allowFullScreen
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -1,0 +1,178 @@
+.admin-layout-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #FAFAFA; /* Snow background */
+  font-family: 'Helvetica', Arial, sans-serif;
+}
+
+.admin-sidebar {
+  width: 250px;
+  background-color: #111111; /* Nike Black */
+  color: #FFFFFF;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  padding: 32px 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.admin-sidebar-header {
+  padding: 0 24px 32px 24px;
+  border-bottom: 1px solid #28282A; /* Dark Surface divider */
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-sidebar-header h2 {
+  font-family: 'Helvetica', sans-serif;
+  text-transform: uppercase;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.admin-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 16px;
+}
+
+.admin-nav-link {
+  color: #CACACB; /* Border Secondary, used as light disabled */
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 12px 16px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-nav-link:hover {
+  background-color: #28282A; /* Dark Surface */
+  color: #FFFFFF;
+  text-decoration: none;
+}
+
+.admin-nav-link.active-tab {
+  background-color: #FFFFFF;
+  color: #111111; /* Nike Black */
+}
+
+.admin-content {
+  flex-grow: 1;
+  margin-left: 250px; /* Sidebar width */
+  padding: 48px; /* Standard Nike major padding */
+  background-color: #FFFFFF;
+  min-height: 100vh;
+  width: calc(100% - 250px);
+}
+
+.admin-topbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 48px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #E5E5E5; /* Hover Gray as subtle divider */
+}
+
+.admin-user-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.admin-logout-btn {
+  background-color: #111111;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 30px;
+  padding: 8px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.admin-logout-btn:hover {
+  background-color: #707072;
+}
+
+.admin-content-heading {
+  font-family: 'Helvetica', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: #111111;
+  margin-bottom: 32px;
+  text-transform: uppercase;
+}
+
+/* Nike style table overrides */
+.admin-page-container table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-page-container table th {
+  background-color: #FFFFFF;
+  color: #707072;
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 14px;
+  padding: 16px;
+  border-bottom: 2px solid #111111;
+  text-align: left;
+}
+
+.admin-page-container table td {
+  padding: 16px;
+  border-bottom: 1px solid #E5E5E5;
+  vertical-align: middle;
+  color: #111111;
+}
+
+/* Nike outline button for table actions */
+.admin-page-container .btn-primary {
+  background-color: #111111 !important;
+  border: none !important;
+  border-radius: 30px !important;
+  color: white !important;
+}
+
+.admin-page-container .btn-primary:hover {
+  background-color: #707072 !important;
+}
+
+.admin-page-container .btn-danger {
+  background-color: #FFFFFF !important;
+  color: #D30005 !important;
+  border: 1.5px solid #D30005 !important;
+  border-radius: 30px !important;
+}
+
+.admin-page-container .btn-danger:hover {
+  background-color: #D30005 !important;
+  color: #FFFFFF !important;
+}
+
+.admin-page-container .btn-warning {
+  background-color: #FFFFFF !important;
+  color: #111111 !important;
+  border: 1.5px solid #CACACB !important;
+  border-radius: 30px !important;
+}
+
+.admin-page-container .btn-warning:hover {
+  border-color: #111111 !important;
+}

@@ -4,21 +4,18 @@ import authService from '../services/authService';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // Lưu thông tin user ({ id, email, full_name, role })
+  const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Khôi phục user state khi reload trang nhờ HTTP-only cookie gửi kèm request
   useEffect(() => {
     const checkLoginStatus = async () => {
       try {
         const data = await authService.getMe();
-        // Giả sử API trả về định dạng { code, message, data: { user } }
-        const userInfo = data.user || data.data; 
-        setUser(userInfo); 
+        const userInfo = data.data || data;
+        setUser(userInfo);
         setIsAuthenticated(true);
       } catch (error) {
-        // Lỗi 401 hoặc chưa login -> Xóa state
         setUser(null);
         setIsAuthenticated(false);
       } finally {
@@ -27,7 +24,6 @@ export const AuthProvider = ({ children }) => {
     };
     checkLoginStatus();
 
-    // Lắng nghe window event tử axios interceptor để tự động clear thẻ nếu session chết ngang
     const handleUnauthorized = () => {
       setUser(null);
       setIsAuthenticated(false);
@@ -42,15 +38,14 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const data = await authService.login(email, password);
-      // Giả sử API trả về user bên trong data hoặc data.user tuỳ thiết kế BE
-      const userInfo = data.user || data.data || data; 
-      setUser(userInfo); 
+      const userInfo = data.data || data;
+      setUser(userInfo);
       setIsAuthenticated(true);
       return { success: true };
     } catch (error) {
-      return { 
-        success: false, 
-        message: error.response?.data?.message || 'Email hoặc mật khẩu không chính xác' 
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Email hoặc mật khẩu không chính xác'
       };
     }
   };

@@ -93,4 +93,7 @@ public final class Message {
     public static final String BOOKING_SUCCESS = "Mua vé thành công, vui lòng thanh toán trong vòng 10 phút";
     public static final String PAY_BOOKING_SUCCESS = "Thanh toán giao dịch thành công";
     public static final String CANCEL_BOOKING_SUCCESS = "Hủy mua vé thành công";
+
+    //User
+    public static final String GET_USER_PROFILE ="Lấy thông tin profile thành công";
 }

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Table, Button, Form, Modal, Container, Alert } from "react-bootstrap";
-// Removed API service imports
 import "../../CSS/AdminPages.css";
 
 const AccountManager = () => {
@@ -31,7 +30,7 @@ const AccountManager = () => {
 
   const fetchAccounts = async () => {
     setAccounts([{
-      id: 1, full_name: "Admin Dummy", email: "admin@dummy.com", phone: "0123456789", 
+      id: 1, full_name: "Admin Dummy", email: "admin@dummy.com", phone: "0123456789",
       dob: "2000-01-01", gender: "Nam", address: "Dummy City", role: "1", status: "active"
     }]);
   };
@@ -223,7 +222,7 @@ const AccountManager = () => {
                   Sửa
                 </Button>
                 <Button
-                style={{ marginTop: "10px" }}
+                  style={{ marginTop: "10px" }}
                   variant="danger"
                   onClick={() => {
                     setAccountToDelete(account);
@@ -384,12 +383,12 @@ const AccountManager = () => {
           </Form>
         </Modal.Body>
         <Modal.Footer>
-        <Button variant="secondary" onClick={handleCancel}>
+          <Button variant="secondary" onClick={handleCancel}>
             Hủy
           </Button>
-            <Button variant="primary" onClick={handleSave}>
-              Lưu
-            </Button>
+          <Button variant="primary" onClick={handleSave}>
+            Lưu
+          </Button>
         </Modal.Footer>
       </Modal>
 
@@ -406,7 +405,7 @@ const AccountManager = () => {
           Bạn có chắc chắn muốn xóa tài khoản này không?
         </Modal.Body>
         <Modal.Footer>
-        <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
             Hủy
           </Button>
           <Button variant="danger" onClick={handleDelete}>
