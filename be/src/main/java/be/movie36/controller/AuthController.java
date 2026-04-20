@@ -79,6 +79,16 @@ public class AuthController {
                 ApiResponse.success("Mã OTP đã được gửi đến email của bạn"));
     }
 
+    // POST /api/auth/verify-otp
+    @PostMapping("/verify-otp")
+    public ResponseEntity<ApiResponse<Void>> verifyOtp(
+            @Valid @RequestBody VerifyOtpRequest request) {
+
+        passwordResetService.verifyOtp(request);
+        return ResponseEntity.ok(
+                ApiResponse.success("OTP hợp lệ"));
+    }
+
     // POST /api/auth/reset-password  (public)
     @PostMapping("/reset-password")
     public ResponseEntity<ApiResponse<Void>> resetPassword(
@@ -103,7 +113,6 @@ public class AuthController {
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60)
                 .build();
-
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
     }

@@ -3,11 +3,15 @@ import { useParams } from "react-router-dom";
 import { Container, Row, Col, Form, Button, Modal, Table } from "react-bootstrap";
 import { Lock, PencilSquare } from 'react-bootstrap-icons';
 import { InputGroup, FormControl } from 'react-bootstrap';
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import authService from "../../services/authService";
 import bookingService from "../../services/bookingService";
 
 function UserProfile() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const [show, setShow] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [tickets, setTickets] = useState([]);
@@ -134,16 +138,27 @@ function UserProfile() {
     return Object.keys(validationErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateFields()) return;
     setUpdating(true);
-    setTimeout(() => {
-      setSuccessMessage("Tính năng cập nhật đang được hoàn thiện!");
+    try {
+      const response = await authService.updateProfile({
+        fullName: formData.full_name,
+        phone: formData.phone,
+        gender: formData.gender,
+      });
+      const updatedUser = response.data || response;
+      setUserData(updatedUser);
+      setSuccessMessage("Cập nhật thông tin thành công!");
       setShowSuccessModal(true);
-      setUpdating(false);
       handleCloseEdit();
-    }, 500);
+    } catch (err) {
+      setSuccessMessage(err.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại!");
+      setShowSuccessModal(true);
+    } finally {
+      setUpdating(false);
+    }
   };
 
   const handlePasswordSubmit = async (e) => {
@@ -157,9 +172,14 @@ function UserProfile() {
         newPassword: passwordData.newPassword,
         confirmPassword: passwordData.confirmPassword,
       });
-      setSuccessMessage("Đổi mật khẩu thành công!");
+      setSuccessMessage("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
       setShowSuccessModal(true);
       handleClose();
+      // Chờ một chút trước khi đăng xuất
+      setTimeout(() => {
+        logout();
+        navigate("/login");
+      }, 2000);
     } catch (err) {
       const msg = err.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại!";
       setErrors({ oldPassword: msg });
@@ -350,6 +370,7 @@ function UserProfile() {
             <Form.Group className="mb-4">
               <Form.Label style={{ color: '#707072', fontSize: '14px', textTransform: 'uppercase', fontWeight: '500' }}>Mật khẩu hiện tại</Form.Label>
               <Form.Control
+                placeholder="Nhập mật khẩu cũ"
                 type="password"
                 name="oldPassword"
                 value={passwordData.oldPassword}
@@ -364,6 +385,7 @@ function UserProfile() {
             <Form.Group className="mb-4">
               <Form.Label style={{ color: '#707072', fontSize: '14px', textTransform: 'uppercase', fontWeight: '500' }}>Mật khẩu mới</Form.Label>
               <Form.Control
+                placeholder="Nhập mật khẩu mới"
                 type="password"
                 name="newPassword"
                 value={passwordData.newPassword}
@@ -380,6 +402,7 @@ function UserProfile() {
                 Xác nhận mật khẩu
               </Form.Label>
               <Form.Control
+                placeholder="Xác nhận lại mật khẩu mới"
                 type="password"
                 name="confirmPassword"
                 value={passwordData.confirmPassword}

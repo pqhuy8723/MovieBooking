@@ -9,8 +9,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
+import be.movie36.dto.request.UpdateProfileRequest;
 
 @RestController
 @RequestMapping("/api/users")
@@ -26,5 +30,15 @@ public class UserController {
 
         UserResponse profile = userService.getProfile(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.success(Message.GET_USER_PROFILE, profile));
+    }
+
+    // PUT /api/users/profile
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<UserResponse>> updateProfile(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody UpdateProfileRequest request) {
+
+        UserResponse profile = userService.updateProfile(userDetails.getUsername(), request);
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật thông tin thành công", profile));
     }
 }

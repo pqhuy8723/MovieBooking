@@ -19,7 +19,7 @@ function HomePage() {
     setData([
       {
         id: 1, title: "Avengers: Secret Wars",
-        banner: "https://via.placeholder.com/1440x600/111111/FFFFFF?text=AVENGERS+SECRET+WARS",
+        banner: "https://files.betacorp.vn/media/images/2026/04/16/thiet-ke-chua-co-ten-15-093903-160426-60.png",
         poster: "https://via.placeholder.com/300x450/111111/FFFFFF?text=Movie+1",
         movie_type: 1, genre_ids: [1], duration: 148, release_date: "2026-05-01",
         video_url: "https://www.youtube.com/embed/tgbNymZ7vqY"

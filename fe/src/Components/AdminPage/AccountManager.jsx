@@ -1,415 +1,413 @@
-import React, { useEffect, useState } from "react";
-import { Table, Button, Form, Modal, Container, Alert } from "react-bootstrap";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
+import { Table, Button, Form, Modal, Container, Alert, Badge, Pagination, Row, Col } from "react-bootstrap";
+import adminUserService from "../../services/adminUserService";
 import "../../CSS/AdminPages.css";
+
+const genderLabel = (g) => {
+  if (g === "MALE") return "Nam";
+  if (g === "FEMALE") return "Nữ";
+  if (g === "OTHER") return "Khác";
+  return "—";
+};
+
+const emptyCreateForm = { fullName: "", email: "", password: "", phone: "", gender: "", role: "USER" };
 
 const AccountManager = () => {
   const [accounts, setAccounts] = useState([]);
-  const [currentAccount, setCurrentAccount] = useState(null);
-  const [newAccount, setNewAccount] = useState(initialAccountState());
-  const [errors, setErrors] = useState({});
-  const [showModal, setShowModal] = useState(false);
+  const [totalPages, setTotalPages] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [accountToDelete, setAccountToDelete] = useState(null);
 
-  function initialAccountState() {
-    return {
-      password: "",
-      role: "2",
-      dob: "",
-      gender: "",
-      address: "",
-      email: "",
-      phone: "",
-      full_name: "",
-      status: "active",
-      tickets: [],
-    };
-  }
+  const [filterGender, setFilterGender] = useState("");
+  const [filterEnabled, setFilterEnabled] = useState("");
 
-  const fetchAccounts = async () => {
-    setAccounts([{
-      id: 1, full_name: "Admin Dummy", email: "admin@dummy.com", phone: "0123456789",
-      dob: "2000-01-01", gender: "Nam", address: "Dummy City", role: "1", status: "active"
-    }]);
+  const [editUser, setEditUser] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({ fullName: "", phone: "", gender: "", role: "", enabled: true });
+  const [editErrors, setEditErrors] = useState({});
+  const [saving, setSaving] = useState(false);
+
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createForm, setCreateForm] = useState(emptyCreateForm);
+  const [createErrors, setCreateErrors] = useState({});
+  const [creating, setCreating] = useState(false);
+
+  const [showToggleModal, setShowToggleModal] = useState(false);
+  const [toggleTarget, setToggleTarget] = useState(null);
+
+
+  const fetchAccounts = useCallback(async (page = 0) => {
+    setLoading(true);
+    try {
+      const res = await adminUserService.getAll(page, 5);
+      const data = res.data || res;
+      setAccounts(data.content || []);
+      setTotalPages(data.totalPages || 0);
+      setCurrentPage(data.number || 0);
+    } catch (err) {
+      setErrorMessage("Không thể tải danh sách tài khoản. Vui lòng thử lại!");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchAccounts(0); }, [fetchAccounts]);
+
+  const filtered = useMemo(() => {
+    return accounts.filter((u) => {
+      if (filterGender && u.gender !== filterGender) return false;
+      if (filterEnabled === "true" && !u.enabled) return false;
+      if (filterEnabled === "false" && u.enabled) return false;
+      return true;
+    });
+  }, [accounts, filterGender, filterEnabled]);
+
+  const notify = (type, msg) => {
+    if (type === "success") { setSuccessMessage(msg); setErrorMessage(null); }
+    else { setErrorMessage(msg); setSuccessMessage(null); }
   };
 
-  const validateFields = () => {
-    const validationErrors = {};
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    const phoneRegex = /^0\d{9,10}$/;
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
-    const today = new Date();
+  const openEditModal = (user) => {
+    setEditUser(user);
+    setEditForm({ fullName: user.fullName || "", phone: user.phone || "", gender: user.gender || "", role: user.role || "USER", enabled: user.enabled });
+    setEditErrors({});
+    setShowEditModal(true);
+  };
 
-    if (!newAccount.full_name) validationErrors.full_name = "Họ và tên không được bỏ trống!";
-    if (!newAccount.gender) validationErrors.gender = "Giới tính không được bỏ trống!";
-    if (!newAccount.email) {
-      validationErrors.email = "Email không đươc bỏ trống!";
-    } else if (!emailRegex.test(newAccount.email)) {
-      validationErrors.email = "Email không đúng định dạng! (....@gmail.com)";
-    } else if (
-      !currentAccount &&
-      accounts.some((acc) => acc.email.toLowerCase() === newAccount.email.toLowerCase())
-    ) {
-      validationErrors.email = "Email đã được đăng ký!";
-    }
-
-    if (!newAccount.phone) {
-      validationErrors.phone = "Số điện thoại không được bỏ trống!";
-    } else if (!phoneRegex.test(newAccount.phone)) {
-      validationErrors.phone = "Số điện thoại không đúng định dạng! (Bắt đầu bằng số 0 và 10-11 số)";
-    } else if (
-      !currentAccount &&
-      accounts.some((acc) => acc.phone === newAccount.phone)
-    ) {
-      validationErrors.phone = "Số điện thoại đã được đăng ký!";
-    }
-
-    if (!newAccount.dob) {
-      validationErrors.dob = "Ngày sinh không được bỏ trống!";
-    } else if (new Date(newAccount.dob) > today) {
-      validationErrors.dob = "Ngày sinh không được là ngày sau hôm nay!";
-    }
-
-    if (!newAccount.password) {
-      validationErrors.password = "Mật khẩu không được bỏ trống!";
-    } else if (!passwordRegex.test(newAccount.password)) {
-      validationErrors.password = "Mật khẩu phải có ít nhất 8 ký tự, ít nhất 1 chữ viết hoa và ít nhất 1 số!";
-    }
-
-    if (!newAccount.address) validationErrors.address = "Địa chỉ không được bỏ trống!";
-
-    setErrors(validationErrors);
-
-    return Object.keys(validationErrors).length === 0;
+  const validateEdit = () => {
+    const errs = {};
+    if (!editForm.fullName.trim()) errs.fullName = "Họ và tên không được bỏ trống!";
+    setEditErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
   const handleSave = async () => {
-    if (!validateFields()) return;
-
-    setTimeout(() => {
-      let updatedAccount;
-
-      if (currentAccount) {
-        updatedAccount = { ...newAccount, id: currentAccount.id };
-        setAccounts((prev) =>
-          prev.map((account) => (account.id === updatedAccount.id ? updatedAccount : account))
-        );
-      } else {
-        updatedAccount = { ...newAccount, id: Date.now() };
-        setAccounts((prev) => [...prev, updatedAccount]);
-      }
-
-      setSuccessMessage("Cập nhật tài khoản thành công!");
-      setShowModal(false);
-      setNewAccount(initialAccountState());
-      setErrors({});
-    }, 300);
+    if (!validateEdit()) return;
+    setSaving(true);
+    try {
+      await adminUserService.update(editUser.id, editForm);
+      notify("success", "Cập nhật tài khoản thành công!");
+      setShowEditModal(false);
+      fetchAccounts(currentPage);
+    } catch (err) {
+      notify("error", err.response?.data?.message || "Cập nhật thất bại, vui lòng thử lại!");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDelete = async () => {
-    if (!accountToDelete) return;
-    setTimeout(() => {
-      setAccounts((prev) => prev.filter((acc) => acc.id !== accountToDelete.id));
-      setSuccessMessage("Xóa tài khoản thành công!");
-      setShowDeleteModal(false);
-    }, 300);
+  const validateCreate = () => {
+    const errs = {};
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!createForm.fullName.trim()) errs.fullName = "Họ và tên không được bỏ trống!";
+    if (!createForm.email.trim()) errs.email = "Email không được bỏ trống!";
+    else if (!emailRe.test(createForm.email)) errs.email = "Email không đúng định dạng!";
+    if (!createForm.password) errs.password = "Mật khẩu không được bỏ trống!";
+    else if (createForm.password.length < 6) errs.password = "Mật khẩu phải có ít nhất 6 ký tự!";
+    setCreateErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
-  const toggleStatus = async (id) => {
-    setTimeout(() => {
-      const account = accounts.find((acc) => acc.id === id);
-      const updated = {
-        ...account,
-        status: account.status === "active" ? "inactive" : "active",
-      };
-      setAccounts((prev) =>
-        prev.map((acc) => (acc.id === updated.id ? updated : acc))
+  const handleCreate = async () => {
+    if (!validateCreate()) return;
+    setCreating(true);
+    try {
+      await adminUserService.create(createForm);
+      notify("success", "Tạo tài khoản thành công!");
+      setShowCreateModal(false);
+      setCreateForm(emptyCreateForm);
+      fetchAccounts(0);
+    } catch (err) {
+      notify("error", err.response?.data?.message || "Tạo tài khoản thất bại!");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const openToggleModal = (user) => { setToggleTarget(user); setShowToggleModal(true); };
+
+  const handleToggle = async () => {
+    try {
+      await adminUserService.update(toggleTarget.id, {
+        fullName: toggleTarget.fullName, phone: toggleTarget.phone,
+        gender: toggleTarget.gender, role: toggleTarget.role,
+        enabled: !toggleTarget.enabled,
+      });
+      notify("success", `Tài khoản đã được ${!toggleTarget.enabled ? "mở khóa" : "khóa"} thành công!`);
+      setShowToggleModal(false);
+      fetchAccounts(currentPage);
+    } catch (err) {
+      notify("error", "Cập nhật trạng thái thất bại!");
+    }
+  };
+
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+    const items = [];
+    for (let i = 0; i < totalPages; i++) {
+      items.push(
+        <Pagination.Item key={i} active={i === currentPage} onClick={() => fetchAccounts(i)}>{i + 1}</Pagination.Item>
       );
-      setSuccessMessage("Cập nhật trạng thái tài khoản thành công!");
-    }, 300);
+    }
+    return (
+      <div className="d-flex justify-content-center mt-3">
+        <Pagination>
+          <Pagination.Prev disabled={currentPage === 0} onClick={() => fetchAccounts(currentPage - 1)} />
+          {items}
+          <Pagination.Next disabled={currentPage === totalPages - 1} onClick={() => fetchAccounts(currentPage + 1)} />
+        </Pagination>
+      </div>
+    );
   };
 
-  useEffect(() => {
-    fetchAccounts();
-  }, []);
+  const fldStyle = { borderRadius: 8, border: "2px solid #dee2e6", padding: "10px 14px", fontSize: 15, transition: "border-color .2s" };
+  const labelStyle = { fontWeight: 600, fontSize: 14, color: "#444", textTransform: "uppercase", marginBottom: 6 };
+  const errStyle = { color: "#dc3545", fontSize: 13, marginTop: 4 };
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setErrors({});
-    setNewAccount(initialAccountState());
-  };
+  const ModalField = ({ label, error, children }) => (
+    <Form.Group className="mb-3">
+      <Form.Label style={labelStyle}>{label}</Form.Label>
+      {children}
+      {error && <div style={errStyle}>{error}</div>}
+    </Form.Group>
+  );
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewAccount((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      [name]: "",
-    }));
-  };
-  const handleCancel = () => {
-    setShowModal(false);
-    setErrors({});
-    setNewAccount(initialAccountState());
-  };
   return (
     <Container>
-      <h2 className="my-4 text-center">Quản Lý Tài Khoản</h2>
+      {/* Header */}
+      <div className="admin-header mt-4">
+        <h2>Quản Lý Tài Khoản</h2>
+        <Button
+          variant="dark"
+          className="admin-btn-add"
+          onClick={() => { setCreateForm(emptyCreateForm); setCreateErrors({}); setShowCreateModal(true); }}
+        >
+          <i className="bi bi-person-plus-fill me-2" />Thêm Tài Khoản
+        </Button>
+      </div>
 
-      {successMessage && (
-        <Alert variant="success" onClose={() => setSuccessMessage(null)} dismissible>
-          {successMessage}
-        </Alert>
+      {/* Alerts */}
+      {successMessage && <Alert variant="success" onClose={() => setSuccessMessage(null)} dismissible className="admin-alert">{successMessage}</Alert>}
+      {errorMessage && <Alert variant="danger" onClose={() => setErrorMessage(null)} dismissible className="admin-alert">{errorMessage}</Alert>}
+
+      {/* Filters */}
+      <div style={{ background: "#fff", borderRadius: 12, padding: "16px 20px", marginBottom: 20, boxShadow: "0 2px 8px rgba(0,0,0,.07)" }}>
+        <Row className="g-3 align-items-end">
+          <Col xs={12} sm={4}>
+            <Form.Label style={labelStyle}>Lọc theo Giới Tính</Form.Label>
+            <Form.Select value={filterGender} onChange={(e) => setFilterGender(e.target.value)} style={fldStyle}>
+              <option value="">-- Tất cả --</option>
+              <option value="MALE">Nam</option>
+              <option value="FEMALE">Nữ</option>
+              <option value="OTHER">Khác</option>
+            </Form.Select>
+          </Col>
+          <Col xs={12} sm={4}>
+            <Form.Label style={labelStyle}>Lọc theo Trạng Thái</Form.Label>
+            <Form.Select value={filterEnabled} onChange={(e) => setFilterEnabled(e.target.value)} style={fldStyle}>
+              <option value="">-- Tất cả --</option>
+              <option value="true">Hoạt động</option>
+              <option value="false">Bị khóa</option>
+            </Form.Select>
+          </Col>
+          <Col xs={12} sm={4}>
+            <Button variant="outline-secondary" style={{ borderRadius: 8 }} onClick={() => { setFilterGender(""); setFilterEnabled(""); }}>
+              <i className="bi bi-x-circle me-1" />Xóa bộ lọc
+            </Button>
+          </Col>
+        </Row>
+      </div>
+
+      {/* Table */}
+      {loading ? (
+        <div className="admin-loading"><div className="spinner-border text-dark" role="status" /></div>
+      ) : (
+        <>
+          <div className="admin-table">
+            <Table className="table mb-0 text-center align-middle">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Họ và Tên</th>
+                  <th>Email</th>
+                  <th>Số Điện Thoại</th>
+                  <th>Giới Tính</th>
+                  <th>Vai Trò</th>
+                  <th>Trạng Thái</th>
+                  <th>Hành Động</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr><td colSpan="8" className="admin-empty">Không có tài khoản nào phù hợp.</td></tr>
+                ) : (
+                  filtered.map((account) => {
+                    const isAdmin = account.role === "ADMIN";
+                    return (
+                      <tr key={account.id}>
+                        <td>{account.id}</td>
+                        <td style={{ fontWeight: 600 }}>{account.fullName || "—"}</td>
+                        <td>{account.email}</td>
+                        <td>{account.phone || "—"}</td>
+                        <td>{genderLabel(account.gender)}</td>
+                        <td>
+                          <Badge bg={isAdmin ? "danger" : "secondary"}>{account.role}</Badge>
+                        </td>
+                        <td>
+                          <Badge bg={account.enabled ? "success" : "warning"} text={account.enabled ? undefined : "dark"}>
+                            {account.enabled ? "Hoạt động" : "Bị khóa"}
+                          </Badge>
+                        </td>
+                        <td>
+                          {isAdmin ? (
+                            <span style={{ color: "#999", fontSize: 13, fontStyle: "italic" }}>Không thể chỉnh sửa</span>
+                          ) : (
+                            <>
+                              <Button variant="warning" size="sm" className="admin-btn-action me-1" onClick={() => openEditModal(account)}>
+                                <i className="bi bi-pencil-square me-1" />Sửa
+                              </Button>
+                              <Button
+                                variant={account.enabled ? "outline-danger" : "outline-success"}
+                                size="sm"
+                                className="admin-btn-action"
+                                onClick={() => openToggleModal(account)}
+                              >
+                                {account.enabled ? <><i className="bi bi-lock me-1" />Khóa</> : <><i className="bi bi-unlock me-1" />Mở khóa</>}
+                              </Button>
+                            </>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </Table>
+          </div>
+          {renderPagination()}
+        </>
       )}
 
-      {errorMessage && (
-        <Alert variant="danger" onClose={() => setErrorMessage(null)} dismissible>
-          {errorMessage}
-        </Alert>
-      )}
-
-      <Table striped bordered hover responsive className="text-center">
-        <thead className="table-dark">
-          <tr>
-            <th>ID</th>
-            <th>Họ và Tên</th>
-            <th>Ngày Sinh</th>
-            <th>Giới Tính</th>
-            <th>Email</th>
-            <th>Mật Khẩu</th>
-            <th>Điện Thoại</th>
-            <th>Địa Chỉ</th>
-            <th>Vai Trò</th>
-            <th>Trạng Thái</th>
-            <th>Hành Động</th>
-          </tr>
-        </thead>
-        <tbody>
-          {accounts.map((account) => (
-            <tr key={account.id}>
-              <td>{account.id}</td>
-              <td>{account.full_name}</td>
-              <td>{account.dob}</td>
-              <td>{account.gender}</td>
-              <td>{account.email}</td>
-              <td>{account.password}</td>
-              <td>{account.phone}</td>
-              <td>{account.address}</td>
-              <td>{account.role === "1" ? "Admin" : "User"}</td>
-              <td>
-                <Button
-                  variant={account.status === "active" ? "success" : "secondary"}
-                  onClick={() => toggleStatus(account.id)}
-                >
-                  {account.status === "active" ? "Hoạt động" : "Vô hiệu"}
-                </Button>
-              </td>
-              <td>
-                <Button
-                  variant="warning"
-                  className="me-2"
-                  onClick={() => {
-                    setCurrentAccount(account);
-                    setNewAccount(account);
-                    setShowModal(true);
-                  }}
-                >
-                  Sửa
-                </Button>
-                <Button
-                  style={{ marginTop: "10px" }}
-                  variant="danger"
-                  onClick={() => {
-                    setAccountToDelete(account);
-                    setShowDeleteModal(true);
-                  }}
-                >
-                  Xóa
-                </Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-
-      <Button
-        variant="primary"
-        onClick={() => {
-          setCurrentAccount(null);
-          setNewAccount(initialAccountState());
-          setShowModal(true);
-        }}
-      >
-        Thêm Tài Khoản
-      </Button>
-
-      <Modal
-        show={showModal}
-        onHide={handleCloseModal}
-        size="xl"
-        centered
-        backdrop="static"
-        className="admin-modal"
-      >
+      {/* ── MODAL: Chỉnh sửa ───────────────────────────── */}
+      <Modal show={showEditModal} onHide={() => setShowEditModal(false)} centered backdrop="static" className="admin-modal">
         <Modal.Header closeButton>
-          <Modal.Title>
-            {currentAccount ? "Sửa Tài Khoản" : "Thêm Tài Khoản"}
-          </Modal.Title>
+          <Modal.Title>Chỉnh Sửa Tài Khoản</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form className="admin-form">
-            <Form.Group className="mb-3">
-              <Form.Label>* Họ và Tên</Form.Label>
+            <ModalField label="* Họ và Tên" error={editErrors.fullName}>
               <Form.Control
-                type="text"
-                placeholder="Họ và Tên"
-                name="full_name"
-                value={newAccount.full_name}
-                onChange={handleInputChange}
-                isInvalid={!!errors.full_name}
+                style={fldStyle} type="text" value={editForm.fullName}
+                onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
+                isInvalid={!!editErrors.fullName}
               />
-              <Form.Control.Feedback type="invalid">
-                {errors.full_name}
-              </Form.Control.Feedback>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>* Ngày Sinh</Form.Label>
+            </ModalField>
+            <ModalField label="Số Điện Thoại">
               <Form.Control
-                type="date"
-                placeholder="Ngày Sinh"
-                name="dob"
-                value={newAccount.dob}
-                onChange={handleInputChange}
-                isInvalid={!!errors.dob}
+                style={fldStyle} type="text" value={editForm.phone}
+                onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
               />
-              <Form.Control.Feedback type="invalid">
-                {errors.dob}
-              </Form.Control.Feedback>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>* Giới Tính</Form.Label>
-              <Form.Select
-                name="gender"
-                value={newAccount.gender}
-                onChange={handleInputChange}
-                isInvalid={!!errors.gender}
-              >
-                <option value="">-- Chọn Giới Tính --</option>
-                <option value="Nam">Nam</option>
-                <option value="Nữ">Nữ</option>
-                <option value="Khác">Khác</option>
+            </ModalField>
+            <ModalField label="Giới Tính">
+              <Form.Select style={fldStyle} value={editForm.gender} onChange={(e) => setEditForm({ ...editForm, gender: e.target.value })}>
+                <option value="">-- Chọn --</option>
+                <option value="MALE">Nam</option>
+                <option value="FEMALE">Nữ</option>
+                <option value="OTHER">Khác</option>
               </Form.Select>
-              <Form.Control.Feedback type="invalid">
-                {errors.gender}
-              </Form.Control.Feedback>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>* Email</Form.Label>
-              <Form.Control
-                type="email"
-                placeholder="Email"
-                name="email"
-                value={newAccount.email.toLowerCase()}
-                onChange={handleInputChange}
-                isInvalid={!!errors.email}
-              />
-              <Form.Control.Feedback type="invalid">
-                {errors.email}
-              </Form.Control.Feedback>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>* Mật Khẩu</Form.Label>
-              <Form.Control
-                type="password"
-                placeholder="Password"
-                name="password"
-                value={newAccount.password}
-                onChange={handleInputChange}
-                isInvalid={!!errors.password}
-              />
-              <Form.Control.Feedback type="invalid">
-                {errors.password}
-              </Form.Control.Feedback>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>* Số Điện Thoại</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Số điện thoại"
-                name="phone"
-                value={newAccount.phone}
-                onChange={handleInputChange}
-                isInvalid={!!errors.phone}
-              />
-              <Form.Control.Feedback type="invalid">
-                {errors.phone}
-              </Form.Control.Feedback>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>* Địa Chỉ</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Địa chỉ"
-                name="address"
-                value={newAccount.address}
-                onChange={handleInputChange}
-                isInvalid={!!errors.address}
-              />
-              <Form.Control.Feedback type="invalid">
-                {errors.address}
-              </Form.Control.Feedback>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>* Vai trò</Form.Label>
-              <Form.Select
-                name="role"
-                value={newAccount.role}
-                onChange={handleInputChange}
-                isInvalid={!!errors.role}
-              >
-                <option value="">-- Chọn Vai Trò --</option>
-                <option value="1">Admin</option>
-                <option value="2">User</option>
+            </ModalField>
+            <ModalField label="Vai Trò">
+              <Form.Select style={fldStyle} value={editForm.role} onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}>
+                <option value="USER">User</option>
+                <option value="ADMIN">Admin</option>
               </Form.Select>
-              <Form.Control.Feedback type="invalid">
-                {errors.role}
-              </Form.Control.Feedback>
-            </Form.Group>
+            </ModalField>
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleCancel}>
-            Hủy
-          </Button>
-          <Button variant="primary" onClick={handleSave}>
-            Lưu
+          <Button variant="secondary" onClick={() => setShowEditModal(false)}>Hủy</Button>
+          <Button variant="dark" onClick={handleSave} disabled={saving}>
+            {saving ? "Đang lưu..." : "Lưu thay đổi"}
           </Button>
         </Modal.Footer>
       </Modal>
 
-      <Modal
-        show={showDeleteModal}
-        onHide={() => setShowDeleteModal(false)}
-        centered
-        backdrop="static"
-      >
+      {/* ── MODAL: Tạo mới ─────────────────────────────── */}
+      <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)} centered backdrop="static" className="admin-modal">
         <Modal.Header closeButton>
-          <Modal.Title>Xác Nhận Xóa Tài Khoản</Modal.Title>
+          <Modal.Title>Thêm Tài Khoản Mới</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Bạn có chắc chắn muốn xóa tài khoản này không?
+          <Form className="admin-form">
+            <ModalField label="* Họ và Tên" error={createErrors.fullName}>
+              <Form.Control
+                style={fldStyle} type="text" placeholder="Nhập họ và tên"
+                value={createForm.fullName}
+                onChange={(e) => { setCreateForm({ ...createForm, fullName: e.target.value }); setCreateErrors({ ...createErrors, fullName: "" }); }}
+                isInvalid={!!createErrors.fullName}
+              />
+            </ModalField>
+            <ModalField label="* Email" error={createErrors.email}>
+              <Form.Control
+                style={fldStyle} type="email" placeholder="example@email.com"
+                value={createForm.email}
+                onChange={(e) => { setCreateForm({ ...createForm, email: e.target.value }); setCreateErrors({ ...createErrors, email: "" }); }}
+                isInvalid={!!createErrors.email}
+              />
+            </ModalField>
+            <ModalField label="* Mật Khẩu" error={createErrors.password}>
+              <Form.Control
+                style={fldStyle} type="password" placeholder="Tối thiểu 6 ký tự"
+                value={createForm.password}
+                onChange={(e) => { setCreateForm({ ...createForm, password: e.target.value }); setCreateErrors({ ...createErrors, password: "" }); }}
+                isInvalid={!!createErrors.password}
+              />
+            </ModalField>
+            <ModalField label="Số Điện Thoại">
+              <Form.Control
+                style={fldStyle} type="text" placeholder="Số điện thoại"
+                value={createForm.phone}
+                onChange={(e) => setCreateForm({ ...createForm, phone: e.target.value })}
+              />
+            </ModalField>
+            <ModalField label="Giới Tính">
+              <Form.Select style={fldStyle} value={createForm.gender} onChange={(e) => setCreateForm({ ...createForm, gender: e.target.value })}>
+                <option value="">-- Chọn --</option>
+                <option value="MALE">Nam</option>
+                <option value="FEMALE">Nữ</option>
+                <option value="OTHER">Khác</option>
+              </Form.Select>
+            </ModalField>
+          </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-            Hủy
+          <Button variant="secondary" onClick={() => setShowCreateModal(false)}>Hủy</Button>
+          <Button variant="dark" onClick={handleCreate} disabled={creating}>
+            {creating ? "Đang tạo..." : "Tạo tài khoản"}
           </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            Xóa
+        </Modal.Footer>
+      </Modal>
+
+      {/* ── MODAL: Khóa/Mở xác nhận ───────────────────── */}
+      <Modal show={showToggleModal} onHide={() => setShowToggleModal(false)} centered backdrop="static">
+        <Modal.Header closeButton style={{ background: toggleTarget?.enabled ? "#dc3545" : "#198754", color: "#fff", borderBottom: "none" }}>
+          <Modal.Title>{toggleTarget?.enabled ? "Xác Nhận Khóa Tài Khoản" : "Xác Nhận Mở Khóa"}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: "24px 28px", fontSize: 15 }}>
+          Bạn có chắc muốn <strong>{toggleTarget?.enabled ? "khóa" : "mở khóa"}</strong> tài khoản{" "}
+          <strong>{toggleTarget?.fullName || toggleTarget?.email}</strong>?
+          {toggleTarget?.enabled && (
+            <div style={{ marginTop: 12, color: "#888", fontSize: 13 }}>
+              Tài khoản bị khóa sẽ không thể đăng nhập cho đến khi được mở lại.
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer style={{ borderTop: "1px solid #eee" }}>
+          <Button variant="secondary" onClick={() => setShowToggleModal(false)}>Hủy</Button>
+          <Button variant={toggleTarget?.enabled ? "danger" : "success"} onClick={handleToggle}>
+            {toggleTarget?.enabled ? "Xác nhận Khóa" : "Xác nhận Mở khóa"}
           </Button>
         </Modal.Footer>
       </Modal>

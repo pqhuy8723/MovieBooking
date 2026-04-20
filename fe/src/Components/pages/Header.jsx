@@ -70,7 +70,7 @@ function Header() {
               <Link
                 to="/login"
                 className="btn-nike-primary"
-                style={{ padding: '8px 20px', fontSize: '14px' }}
+                style={{ padding: '8px 20px', fontSize: '14px', color: "#ffffff" }}
               >
                 Đăng ký
               </Link>

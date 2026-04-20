@@ -15,18 +15,31 @@ const LoginRegister = () => {
   const [remember, setRemember] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [otp, setOtp] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [successModal, setSuccessModal] = useState(false);
+  const [successModalMessage, setSuccessModalMessage] = useState("");
 
   const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const remembered = localStorage.getItem("rememberedAccount");
-    if (remembered) {
-      const { email: e, password: p } = JSON.parse(remembered);
-      setEmail(e); setPassword(p); setRemember(true);
+    const rememberedEmail = localStorage.getItem("rememberedEmail");
+    if (rememberedEmail) {
+      setEmail(rememberedEmail);
+      setRemember(true);
+    } else {
+      const oldRemembered = localStorage.getItem("rememberedAccount");
+      if (oldRemembered) {
+        try {
+          const { email: e } = JSON.parse(oldRemembered);
+          if (e) {
+            setEmail(e);
+            setRemember(true);
+          }
+        } catch (err) { }
+      }
     }
   }, []);
 
@@ -42,8 +55,13 @@ const LoginRegister = () => {
     setErrorMessage("");
     const result = await login(email, password);
     if (result.success) {
-      if (remember) localStorage.setItem("rememberedAccount", JSON.stringify({ email, password }));
-      else localStorage.removeItem("rememberedAccount");
+      if (remember) {
+        localStorage.setItem("rememberedEmail", email);
+        localStorage.removeItem("rememberedAccount"); // Clean up old unsecure data
+      } else {
+        localStorage.removeItem("rememberedEmail");
+        localStorage.removeItem("rememberedAccount");
+      }
     } else {
       setErrorMessage(result.message);
     }
@@ -75,6 +93,77 @@ const LoginRegister = () => {
       setCurrentForm("login");
     } catch (err) {
       setErrorMessage(err.response?.data?.message || "Đăng ký thất bại. Thử lại sau!");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    if (!email) {
+      setErrorMessage("Vui lòng nhập email.");
+      return;
+    }
+    setIsSubmitting(true);
+    setErrorMessage("");
+    try {
+      await authService.forgotPassword(email);
+      setSuccessModalMessage("Mã OTP đã được gửi đến email của bạn.");
+      setSuccessModal(true);
+      setCurrentForm("verifyOtp");
+    } catch (err) {
+      setErrorMessage(err.response?.data?.message || err.response?.data?.error || "Gửi yêu cầu thất bại. Thử lại sau!");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    if (!otp) {
+      setErrorMessage("Vui lòng nhập mã OTP.");
+      return;
+    }
+    setIsSubmitting(true);
+    setErrorMessage("");
+    try {
+      await authService.verifyOtp(email, otp);
+      setSuccessModalMessage("OTP hợp lệ, vui lòng nhập mật khẩu mới.");
+      setSuccessModal(true);
+      setCurrentForm("resetPassword");
+    } catch (err) {
+      setErrorMessage(err.response?.data?.message || err.response?.data?.error || "OTP không hợp lệ hoặc đã hết hạn.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (!otp || !password || !confirmPassword) {
+      setErrorMessage("Vui lòng nhập đầy đủ thông tin.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setErrorMessage("Mật khẩu không khớp.");
+      return;
+    }
+    if (password.length < 6) {
+      setErrorMessage("Mật khẩu tối thiểu 6 ký tự.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage("");
+    try {
+      await authService.resetPassword({ email, otp, newPassword: password, confirmPassword });
+      setSuccessModalMessage("Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại.");
+      setSuccessModal(true);
+      setCurrentForm("login");
+      setPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      setErrorMessage(err.response?.data?.message || err.response?.data?.error || "Đặt lại mật khẩu thất bại. Thử lại sau!");
     } finally {
       setIsSubmitting(false);
     }
@@ -113,11 +202,14 @@ const LoginRegister = () => {
         <div className="nike-login-logo">
           <h1>MOVIE 36</h1>
           <p style={{ fontSize: '14px', color: '#707072', marginTop: '4px', textTransform: 'none', fontWeight: '400' }}>
-            {currentForm === "login" ? "Chào mừng trở lại" : "Tạo tài khoản mới"}
+            {currentForm === "login" && "Chào mừng trở lại"}
+            {currentForm === "register" && "Tạo tài khoản mới"}
+            {currentForm === "forgotPassword" && "Khôi phục mật khẩu"}
+            {currentForm === "verifyOtp" && "Xác thực OTP"}
+            {currentForm === "resetPassword" && "Đặt lại mật khẩu"}
           </p>
         </div>
 
-        {/* Tabs */}
         <div className="nike-tabs">
           <button
             className={`nike-tab ${currentForm === "login" ? "active" : ""}`}
@@ -164,6 +256,12 @@ const LoginRegister = () => {
                 <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
                 Ghi nhớ
               </label>
+              <span
+                style={{ fontSize: '14px', color: '#707072', cursor: 'pointer', textDecoration: 'underline' }}
+                onClick={() => { setCurrentForm("forgotPassword"); setErrorMessage(""); }}
+              >
+                Quên mật khẩu?
+              </span>
             </div>
 
             {errorMessage && (
@@ -278,15 +376,157 @@ const LoginRegister = () => {
             </button>
           </form>
         )}
+
+        {/* FORGOT PASSWORD FORM */}
+        {currentForm === "forgotPassword" && (
+          <form onSubmit={handleForgotPassword}>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={labelStyle}>Email</label>
+              <input
+                type="email"
+                style={inputStyle}
+                value={email}
+                onChange={(e) => { setEmail(e.target.value.toLowerCase()); setErrorMessage(""); }}
+                placeholder="email@example.com"
+                required
+              />
+            </div>
+
+            {errorMessage && (
+              <div style={{ background: '#FFE5E5', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', color: '#D30005', fontSize: '14px' }}>
+                {errorMessage}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="btn-nike-primary"
+              style={{ width: '100%', marginBottom: '12px' }}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Đang gửi OTP..." : "Gửi thông tin khôi phục"}
+            </button>
+            <button
+              type="button"
+              className="btn-nike-outline"
+              style={{ width: '100%' }}
+              onClick={() => { setCurrentForm("login"); setErrorMessage(""); }}
+            >
+              Hủy
+            </button>
+          </form>
+        )}
+
+        {/* VERIFY OTP FORM */}
+        {currentForm === "verifyOtp" && (
+          <form onSubmit={handleVerifyOtp}>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={labelStyle}>Email</label>
+              <input
+                type="email"
+                style={{ ...inputStyle, background: '#e0e0e0', cursor: 'not-allowed' }}
+                value={email}
+                disabled
+              />
+            </div>
+
+            <div style={{ marginBottom: '12px' }}>
+              <label style={labelStyle}>Mã OTP *</label>
+              <input
+                type="text"
+                style={inputStyle}
+                value={otp}
+                onChange={(e) => { setOtp(e.target.value); setErrorMessage(""); }}
+                placeholder="Nhập mã OTP (6 chữ số)"
+                required
+              />
+            </div>
+
+            {errorMessage && (
+              <div style={{ background: '#FFE5E5', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', color: '#D30005', fontSize: '14px' }}>
+                {errorMessage}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="btn-nike-primary"
+              style={{ width: '100%', marginBottom: '12px' }}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Đang xác thực..." : "Tiếp tục"}
+            </button>
+            <button
+              type="button"
+              className="btn-nike-outline"
+              style={{ width: '100%' }}
+              onClick={() => { setCurrentForm("login"); setErrorMessage(""); }}
+            >
+              Hủy
+            </button>
+          </form>
+        )}
+
+        {/* RESET PASSWORD FORM */}
+        {currentForm === "resetPassword" && (
+          <form onSubmit={handleResetPassword}>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={labelStyle}>Mật khẩu mới *</label>
+              <input
+                type="password"
+                style={inputStyle}
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setErrorMessage(""); }}
+                placeholder="Tối thiểu 6 ký tự"
+                required
+              />
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={labelStyle}>Xác nhận mật khẩu mới *</label>
+              <input
+                type="password"
+                style={inputStyle}
+                value={confirmPassword}
+                onChange={(e) => { setConfirmPassword(e.target.value); setErrorMessage(""); }}
+                placeholder="Nhập lại mật khẩu mới"
+                required
+              />
+            </div>
+
+            {errorMessage && (
+              <div style={{ background: '#FFE5E5', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', color: '#D30005', fontSize: '14px' }}>
+                {errorMessage}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="btn-nike-primary"
+              style={{ width: '100%', marginBottom: '12px' }}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Đang đặt lại..." : "Đặt lại mật khẩu"}
+            </button>
+            <button
+              type="button"
+              className="btn-nike-outline"
+              style={{ width: '100%' }}
+              onClick={() => { setCurrentForm("login"); setErrorMessage(""); }}
+            >
+              Hủy
+            </button>
+          </form>
+        )}
       </div>
 
       {/* Success modal */}
       <Modal show={successModal} onHide={() => setSuccessModal(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>TẠO TÀI KHOẢN THÀNH CÔNG</Modal.Title>
+          <Modal.Title>THÔNG BÁO</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p style={{ color: '#707072' }}>Tài khoản đã được tạo. Vui lòng đăng nhập để tiếp tục.</p>
+          <p style={{ color: '#707072' }}>{successModalMessage || "Thao tác thành công. Vui lòng tiếp tục."}</p>
         </Modal.Body>
         <Modal.Footer>
           <button
@@ -294,7 +534,7 @@ const LoginRegister = () => {
             style={{ padding: '10px 24px' }}
             onClick={() => setSuccessModal(false)}
           >
-            Đăng nhập ngay
+            {currentForm === "verifyOtp" || currentForm === "resetPassword" ? "Tiếp tục" : "Đóng"}
           </button>
         </Modal.Footer>
       </Modal>

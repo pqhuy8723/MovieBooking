@@ -2,6 +2,7 @@ package be.movie36.service;
 
 import be.movie36.dto.request.ForgotPasswordRequest;
 import be.movie36.dto.request.ResetPasswordRequest;
+import be.movie36.dto.request.VerifyOtpRequest;
 import be.movie36.entity.Otp;
 import be.movie36.entity.User;
 import be.movie36.exception.AppException;
@@ -43,6 +44,24 @@ public class PasswordResetService {
         otpRepository.save(resetOtp);
 
         emailService.sendOtpEmail(user.getEmail(), sendOtp);
+    }
+
+    // verify otp
+    public void verifyOtp(VerifyOtpRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        Otp resetOtp = otpRepository.findByOtpAndUsedFalse(request.getOtp())
+                .orElseThrow(() -> new AppException(ErrorCode.OTP_INVALID));
+
+        if (!resetOtp.getUser().getId().equals(user.getId())) {
+            throw new AppException(ErrorCode.OTP_INVALID);
+        }
+
+        if (resetOtp.getExpiryDate().isBefore(LocalDateTime.now())) {
+            otpRepository.delete(resetOtp);
+            throw new AppException(ErrorCode.OTP_EXPIRED);
+        }
     }
 
     // resetpassword

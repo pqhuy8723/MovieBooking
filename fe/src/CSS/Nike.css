@@ -295,6 +295,28 @@ body {
   background-color: var(--light-gray);
 }
 
+.btn-nike-outline {
+  background-color: var(--nike-white);
+  color: var(--nike-black);
+  border: 1px solid var(--border-secondary);
+  border-radius: 30px;
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 500;
+  font-family: var(--font-main);
+  cursor: pointer;
+  transition: all 200ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.btn-nike-outline:hover {
+  border-color: var(--nike-black);
+}
+
 /* =============================================
    INPUTS
    ============================================= */

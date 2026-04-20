@@ -69,6 +69,7 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/api/auth/refresh",
                                 "/api/auth/forgot-password",
+                                "/api/auth/verify-otp",
                                 "/api/auth/reset-password",
 
                                 // OAuth2
@@ -116,6 +117,7 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 "/api/admin/**",
+                                "/api/admin/users/**",
                                 "/api/movies/**",
                                 "/api/genres/**",
                                 "/api/languages/**",
