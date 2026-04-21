@@ -1,17 +1,16 @@
-import React, { useEffect, useState, useCallback } from "react";
+﻿import React, { useEffect, useState, useCallback } from "react";
 import { Table, Button, Form, Modal, Container, Alert, Pagination, Row, Col } from "react-bootstrap";
-import languageService from "../../services/languageService";
-import "../../CSS/LanguagesManager.css";
+import actorService from "../../services/actorService";
 import "../../CSS/AdminPages.css";
 
-const LanguagesManager = () => {
-  const [languages, setLanguages] = useState([]);
-  const [currentLanguage, setCurrentLanguage] = useState(null);
-  const [newLanguage, setNewLanguage] = useState("");
+const ActorsManager = () => {
+  const [actors, setGenres] = useState([]);
+  const [currentActor, setCurrentActor] = useState(null);
+  const [newActor, setNewActor] = useState("");
   const [newStatus, setNewStatus] = useState("ACTIVE");
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteLanguageId, setDeleteLanguageId] = useState(null);
+  const [deleteActorId, setDeleteActorId] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [validationError, setValidationError] = useState("");
@@ -23,97 +22,98 @@ const LanguagesManager = () => {
   const [debouncedFilter, setDebouncedFilter] = useState("");
   const pageSize = 5;
 
+  // Cập nhật debouncedFilter sau 500ms
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedFilter(filterName), 500);
     return () => clearTimeout(timer);
   }, [filterName]);
 
-  const fetchLanguages = useCallback(async (pageIndex = 0) => {
+  const fetchActors = useCallback(async (pageIndex = 0) => {
     setLoading(true);
     try {
-      const res = await languageService.getAll(pageIndex, pageSize, debouncedFilter);
+      const res = await actorService.getAll(pageIndex, pageSize, debouncedFilter);
       const pageData = res.data || res.result || res;
       if (pageData) {
-        setLanguages(pageData.content || []);
+        setGenres(pageData.content || (Array.isArray(pageData) ? pageData : []));
         setTotalPages(pageData.totalPages || 1);
         setCurrentPage(pageIndex);
       }
     } catch (err) {
-      setError(err?.response?.data?.message || "Lỗi khi tải danh sách ngôn ngữ");
+      setError(err?.response?.data?.message || "Lỗi khi tải danh sách diễn viên");
     } finally {
       setLoading(false);
     }
   }, [debouncedFilter]);
 
   useEffect(() => {
-    fetchLanguages(currentPage);
-  }, [fetchLanguages, currentPage]);
+    fetchActors(currentPage);
+  }, [fetchActors, currentPage]);
 
-  const addLanguage = async () => {
-    if (!newLanguage.trim()) {
-      setValidationError("Tên ngôn ngữ không được để trống!");
+  const addActor = async () => {
+    if (!newActor.trim()) {
+      setValidationError("Tên diễn viên không được để trống!");
       return;
     }
     try {
-      await languageService.create({ name: newLanguage.trim(), status: newStatus });
-      setSuccess("Thêm ngôn ngữ thành công!");
+      await actorService.create({ name: newActor.trim(), status: newStatus });
+      setSuccess("Thêm diễn viên thành công!");
       setError(null);
       setShowModal(false);
-      setNewLanguage("");
+      setNewActor("");
       setNewStatus("ACTIVE");
       setValidationError("");
-      fetchLanguages(currentPage);
+      fetchActors(currentPage);
     } catch (err) {
-      setValidationError(err?.response?.data?.message || "Lỗi khi thêm ngôn ngữ");
+      setValidationError(err?.response?.data?.message || "Lỗi khi thêm diễn viên");
     }
   };
 
-  const editLanguage = async () => {
-    if (!currentLanguage || !currentLanguage.name.trim()) {
-      setValidationError("Tên ngôn ngữ không được để trống!");
+  const editActor = async () => {
+    if (!currentActor || !currentActor.name.trim()) {
+      setValidationError("Tên diễn viên không được để trống!");
       return;
     }
     try {
-      await languageService.update(currentLanguage.id, {
-        name: currentLanguage.name.trim(),
-        status: currentLanguage.status
+      await actorService.update(currentActor.id, {
+        name: currentActor.name.trim(),
+        status: currentActor.status
       });
-      setSuccess("Cập nhật ngôn ngữ thành công!");
+      setSuccess("Cập nhật diễn viên thành công!");
       setError(null);
       setShowModal(false);
-      setCurrentLanguage(null);
+      setCurrentActor(null);
       setValidationError("");
-      fetchLanguages(currentPage);
+      fetchActors(currentPage);
     } catch (err) {
-      setValidationError(err?.response?.data?.message || "Lỗi khi cập nhật ngôn ngữ");
+      setValidationError(err?.response?.data?.message || "Lỗi khi cập nhật diễn viên");
     }
   };
 
-  const toggleStatus = async (lang) => {
+  const toggleStatus = async (actor) => {
     try {
-      if (lang.status === "ACTIVE") {
-        await languageService.delete(lang.id);
+      if (actor.status === "ACTIVE") {
+        await actorService.delete(actor.id);
       } else {
-        await languageService.restore(lang.id);
+        await actorService.restore(actor.id);
       }
-      setSuccess("Cập nhật trạng thái ngôn ngữ thành công!");
+      setSuccess("Cập nhật trạng thái diễn viên thành công!");
       setError(null);
-      fetchLanguages(currentPage);
+      fetchActors(currentPage);
     } catch (err) {
       setError(err?.response?.data?.message || "Lỗi khi cập nhật trạng thái");
     }
   };
 
-  const deleteLanguage = async () => {
+  const deleteActor = async () => {
     try {
-      await languageService.delete(deleteLanguageId);
-      setSuccess("Xóa ngôn ngữ thành công (đã chuyển sang trạng thái Vô hiệu)!");
+      await actorService.delete(deleteActorId);
+      setSuccess("Xóa diễn viên thành công (đã chuyển sang trạng thái Vô hiệu)!");
       setError(null);
       setShowDeleteModal(false);
-      setDeleteLanguageId(null);
-      fetchLanguages(currentPage);
+      setDeleteActorId(null);
+      fetchActors(currentPage);
     } catch (err) {
-      setError(err?.response?.data?.message || "Lỗi khi xóa ngôn ngữ");
+      setError(err?.response?.data?.message || "Lỗi khi xóa diễn viên");
       setShowDeleteModal(false);
     }
   };
@@ -121,12 +121,12 @@ const LanguagesManager = () => {
   const handleCancel = () => {
     setValidationError("");
     setShowModal(false);
-    setCurrentLanguage(null);
+    setCurrentActor(null);
   };
 
   const handleDeleteCancel = () => {
     setShowDeleteModal(false);
-    setDeleteLanguageId(null);
+    setDeleteActorId(null);
   };
 
   const renderPagination = () => {
@@ -134,7 +134,7 @@ const LanguagesManager = () => {
     let items = [];
     for (let number = 0; number < totalPages; number++) {
       items.push(
-        <Pagination.Item key={number} active={number === currentPage} onClick={() => fetchLanguages(number)}>
+        <Pagination.Item key={number} active={number === currentPage} onClick={() => fetchActors(number)}>
           {number + 1}
         </Pagination.Item>
       );
@@ -142,9 +142,9 @@ const LanguagesManager = () => {
     return (
       <div className="d-flex justify-content-center mt-3">
         <Pagination>
-          <Pagination.Prev disabled={currentPage === 0} onClick={() => fetchLanguages(currentPage - 1)} />
+          <Pagination.Prev disabled={currentPage === 0} onClick={() => fetchActors(currentPage - 1)} />
           {items}
-          <Pagination.Next disabled={currentPage === totalPages - 1} onClick={() => fetchLanguages(currentPage + 1)} />
+          <Pagination.Next disabled={currentPage === totalPages - 1} onClick={() => fetchActors(currentPage + 1)} />
         </Pagination>
       </div>
     );
@@ -155,7 +155,7 @@ const LanguagesManager = () => {
 
   return (
     <Container>
-      <h2 className="my-4 text-center">Quản Lý Ngôn Ngữ</h2>
+      <h2 className="my-4 text-center">Quản Lý Diễn Viên</h2>
       {error && <Alert variant="danger" onClose={() => setError(null)} dismissible>{error}</Alert>}
       {success && <Alert variant="success" onClose={() => setSuccess(null)} dismissible>{success}</Alert>}
 
@@ -166,7 +166,7 @@ const LanguagesManager = () => {
             <Form.Label style={labelStyle}>Tìm theo tên</Form.Label>
             <Form.Control
               type="text"
-              placeholder="Nhập tên ngôn ngữ..."
+              placeholder="Nhập tên diễn viên..."
               value={filterName}
               onChange={(e) => setFilterName(e.target.value)}
               style={fldStyle}
@@ -188,22 +188,22 @@ const LanguagesManager = () => {
             <thead className="table-dark">
               <tr>
                 <th>ID</th>
-                <th>Ngôn Ngữ</th>
+                <th>Diễn Viên</th>
                 <th>Trạng Thái</th>
                 <th>Hành Động</th>
               </tr>
             </thead>
             <tbody>
-              {languages.length === 0 ? (
+              {actors.length === 0 ? (
                 <tr><td colSpan={4}>Không có dữ liệu</td></tr>
               ) : (
-                languages.map((lang) => (
-                  <tr key={lang.id}>
-                    <td>{lang.id}</td>
-                    <td>{lang.name}</td>
+                actors.map((actor) => (
+                  <tr key={actor.id}>
+                    <td>{actor.id}</td>
+                    <td>{actor.name}</td>
                     <td>
-                      <span className={`badge ${lang.status === "ACTIVE" ? "bg-success" : "bg-secondary"}`} style={{ padding: "8px 12px", fontSize: "0.85rem" }}>
-                        {lang.status === "ACTIVE" ? "Hoạt động" : "Vô hiệu"}
+                      <span className={`badge ${actor.status === "ACTIVE" ? "bg-success" : "bg-secondary"}`} style={{ padding: "8px 12px", fontSize: "0.85rem" }}>
+                        {actor.status === "ACTIVE" ? "Hoạt động" : "Vô hiệu"}
                       </span>
                     </td>
                     <td>
@@ -213,19 +213,19 @@ const LanguagesManager = () => {
                         className="me-2 text-white"
                         title="Sửa"
                         onClick={() => {
-                          setCurrentLanguage(lang);
+                          setCurrentActor(actor);
                           setShowModal(true);
                         }}
                       >
                         <i className="bi bi-pencil-square" style={{ fontSize: "1.1rem" }}></i>
                       </Button>
-                      {lang.status === "ACTIVE" ? (
+                      {actor.status === "ACTIVE" ? (
                         <Button
                           variant="danger"
                           size="sm"
                           title="Xóa"
                           onClick={() => {
-                            setDeleteLanguageId(lang.id);
+                            setDeleteActorId(actor.id);
                             setShowDeleteModal(true);
                           }}
                         >
@@ -237,7 +237,7 @@ const LanguagesManager = () => {
                           size="sm"
                           className="text-white"
                           title="Khôi phục"
-                          onClick={() => toggleStatus(lang)}
+                          onClick={() => toggleStatus(actor)}
                         >
                           <i className="bi bi-arrow-counterclockwise" style={{ fontSize: "1.1rem" }}></i>
                         </Button>
@@ -256,14 +256,14 @@ const LanguagesManager = () => {
         variant="primary"
         className="mt-3"
         onClick={() => {
-          setCurrentLanguage(null);
-          setNewLanguage("");
+          setCurrentActor(null);
+          setNewActor("");
           setNewStatus("ACTIVE");
           setShowModal(true);
         }}
         style={{ borderRadius: 8, padding: "10px 20px" }}
       >
-        <i className="bi bi-plus-circle me-2"></i> Thêm Ngôn Ngữ
+        <i className="bi bi-plus-circle me-2"></i> Thêm Diễn Viên
       </Button>
 
       <Modal
@@ -276,21 +276,21 @@ const LanguagesManager = () => {
       >
         <Modal.Header closeButton>
           <Modal.Title>
-            {currentLanguage ? "Sửa Ngôn Ngữ" : "Thêm Ngôn Ngữ"}
+            {currentActor ? "Sửa Diễn Viên" : "Thêm Diễn Viên"}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form className="admin-form">
-            <Form.Group className="mb-3" controlId="formLanguageName">
-              <Form.Label style={labelStyle}>* Tên Ngôn Ngữ</Form.Label>
+            <Form.Group className="mb-3" controlId="formGenreName">
+              <Form.Label style={labelStyle}>* Tên Diễn Viên</Form.Label>
               <Form.Control
                 type="text"
-                placeholder="Nhập tên ngôn ngữ gốc (VD: Tiếng Việt)"
-                value={currentLanguage ? currentLanguage.name : newLanguage}
+                placeholder="Nhập tên diễn viên (VD: Hành Động, Hài Hước)"
+                value={currentActor ? currentActor.name : newActor}
                 onChange={(e) => {
-                  currentLanguage
-                    ? setCurrentLanguage({ ...currentLanguage, name: e.target.value })
-                    : setNewLanguage(e.target.value);
+                  currentActor
+                    ? setCurrentActor({ ...currentActor, name: e.target.value })
+                    : setNewActor(e.target.value);
                   setValidationError("");
                 }}
                 isInvalid={!!validationError}
@@ -310,7 +310,7 @@ const LanguagesManager = () => {
           </Button>
           <Button
             variant="success"
-            onClick={currentLanguage ? editLanguage : addLanguage}
+            onClick={currentActor ? editActor : addActor}
           >
             Lưu
           </Button>
@@ -324,16 +324,16 @@ const LanguagesManager = () => {
         backdrop="static"
       >
         <Modal.Header closeButton>
-          <Modal.Title>Xác Nhận Xóa Ngôn Ngữ</Modal.Title>
+          <Modal.Title>Xác Nhận Xóa Diễn Viên</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Bạn có chắc chắn muốn vô hiệu hóa ngôn ngữ này không? (Có thể khôi phục sau).
+          Bạn có chắc chắn muốn vô hiệu hóa diễn viên này không? (Có thể khôi phục sau).
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleDeleteCancel}>
             Hủy
           </Button>
-          <Button variant="danger" onClick={deleteLanguage}>
+          <Button variant="danger" onClick={deleteActor}>
             Thực hiện xóa
           </Button>
         </Modal.Footer>
@@ -342,4 +342,4 @@ const LanguagesManager = () => {
   );
 };
 
-export default LanguagesManager;
+export default ActorsManager;

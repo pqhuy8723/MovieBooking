@@ -9,6 +9,9 @@ import be.movie36.exception.ErrorCode;
 import be.movie36.repository.GenreRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 
@@ -30,10 +33,15 @@ public class GenreService {
         return toResponse(genreRepository.save(genre));
     }
 
-    // lay ra tat ca
-
-    public List<GenreResponse> getAll() {
-        return genreRepository.findAll().stream().map(this::toResponse).toList();
+    // lay ra tat ca co phan trang va tim kiem su dung Specification
+    public Page<GenreResponse> getAll(String name, Pageable pageable) {
+        Specification<Genre> spec = (root, query, criteriaBuilder) -> {
+            if (name == null || name.isBlank()) {
+                return criteriaBuilder.conjunction();
+            }
+            return criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + name.toLowerCase() + "%");
+        };
+        return genreRepository.findAll(spec, pageable).map(this::toResponse);
     }
 
     // lay tat ca dang o trang thai active

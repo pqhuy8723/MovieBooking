@@ -7,6 +7,9 @@ import be.movie36.dto.response.GenreResponse;
 import be.movie36.service.GenreService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,9 +23,11 @@ public class GenreController {
 
     // GET /api/genres — lấy tất cả (ADMIN)
     @GetMapping
-    public ResponseEntity<ApiResponse<List<GenreResponse>>> getAll() {
+    public ResponseEntity<ApiResponse<Page<GenreResponse>>> getAll(
+            @RequestParam(required = false) String name,
+            @PageableDefault(size = 10) Pageable pageable) {
         return ResponseEntity.ok(
-                ApiResponse.success(Message.GET_GENRE_SUCCESS, genreService.getAll()));
+                ApiResponse.success(Message.GET_GENRE_SUCCESS, genreService.getAll(name, pageable)));
     }
 
     // GET /api/genres/active — lấy các genre đang active (PUBLIC)

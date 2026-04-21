@@ -9,7 +9,9 @@ import {
   Collection,
   Tags,
   Display,
-  Ticket
+  Ticket,
+  People,
+  PersonBadge
 } from 'react-bootstrap-icons';
 
 const AdminLayout = () => {
@@ -40,6 +42,12 @@ const AdminLayout = () => {
           </NavLink>
           <NavLink to="/genres" className={({ isActive }) => `admin-nav-link ${isActive ? 'active-tab' : ''}`}>
             <Tags size={20} /> Thể Loại
+          </NavLink>
+          <NavLink to="/actors" className={({ isActive }) => `admin-nav-link ${isActive ? 'active-tab' : ''}`}>
+            <People size={20} /> Diễn Viên
+          </NavLink>
+          <NavLink to="/directors" className={({ isActive }) => `admin-nav-link ${isActive ? 'active-tab' : ''}`}>
+            <PersonBadge size={20} /> Đạo Diễn
           </NavLink>
           <NavLink to="/movietypes" className={({ isActive }) => `admin-nav-link ${isActive ? 'active-tab' : ''}`}>
             <Collection size={20} /> Định Dạng

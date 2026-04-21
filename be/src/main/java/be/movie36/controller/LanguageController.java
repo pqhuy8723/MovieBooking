@@ -7,6 +7,9 @@ import be.movie36.dto.response.ApiResponse;
 import be.movie36.dto.response.LanguageResponse;
 import be.movie36.service.LanguageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,9 +26,11 @@ public class LanguageController {
 
     // GET /api/language — lấy tất cả (ADMIN)
     @GetMapping
-    public ResponseEntity<ApiResponse<List<LanguageResponse>>> getAll() {
+    public ResponseEntity<ApiResponse<Page<LanguageResponse>>> getAll(
+            @RequestParam(required = false) String name,
+            @PageableDefault(size = 10) Pageable pageable) {
         return ResponseEntity.ok(
-                ApiResponse.success(Message.GET_LANGUAGE_SUCCESS, service.getAll()));
+                ApiResponse.success(Message.GET_LANGUAGE_SUCCESS, service.getAll(name, pageable)));
     }
 
     // GET /api/language/active — lấy các language đang active (PUBLIC)

@@ -2,8 +2,11 @@ import axiosClient from './axiosClient';
 
 const adminUserService = {
   // GET /api/admin/users?page=0&size=5
-  getAll: async (page = 0, size = 5) => {
-    const response = await axiosClient.get(`/admin/users?page=${page}&size=${size}`);
+  getAll: async (page = 0, size = 5, gender = "", status = "") => {
+    let url = `/admin/users?page=${page}&size=${size}`;
+    if (gender) url += `&gender=${gender}`;
+    if (status !== "") url += `&status=${status}`;
+    const response = await axiosClient.get(url);
     return response.data;
   },
 

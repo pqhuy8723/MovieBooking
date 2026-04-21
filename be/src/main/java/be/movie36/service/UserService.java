@@ -15,6 +15,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.data.jpa.domain.Specification;
+import jakarta.persistence.criteria.Predicate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -45,9 +49,29 @@ public class UserService {
         return toResponse(user);
     }
 
-    // Admin: Lấy tất cả user (phân trang)
-    public Page<UserResponse> getAllUsers(Pageable pageable) {
-        return userRepository.findAll(pageable).map(this::toResponse);
+    // Admin: Lấy tất cả user (phân trang) có filter
+    public Page<UserResponse> getAllUsers(String genderStr, Boolean enabled, Pageable pageable) {
+        Gender gender = null;
+        if (genderStr != null && !genderStr.isBlank()) {
+            try {
+                gender = Gender.valueOf(genderStr.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new AppException(ErrorCode.INVALID_GENDER);
+            }
+        }
+        Gender finalGender = gender;
+        Specification<User> spec = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (finalGender != null) {
+                predicates.add(criteriaBuilder.equal(root.get("gender"), finalGender));
+            }
+            if (enabled != null) {
+                predicates.add(criteriaBuilder.equal(root.get("enabled"), enabled));
+            }
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return userRepository.findAll(spec, pageable).map(this::toResponse);
     }
 
     // Admin: Tạo tài khoản user mới

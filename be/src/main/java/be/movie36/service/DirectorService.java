@@ -12,6 +12,9 @@ import be.movie36.exception.ErrorCode;
 import be.movie36.repository.DirectorRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 
@@ -31,9 +34,15 @@ public class DirectorService {
                         .build()));
     }
 
-    // lay danh sach actor
-    public List<DirectorResponse> getAll() {
-        return directorRepository.findAll().stream().map(this::toResponse).toList();
+    // lay danh sach director
+    public Page<DirectorResponse> getAll(String name, Pageable pageable) {
+        Specification<Director> spec = (root, query, criteriaBuilder) -> {
+            if (name == null || name.isBlank()) {
+                return criteriaBuilder.conjunction();
+            }
+            return criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + name.toLowerCase() + "%");
+        };
+        return directorRepository.findAll(spec, pageable).map(this::toResponse);
     }
 
 
@@ -67,14 +76,14 @@ public class DirectorService {
     public void delete(Long id) {
         Director director = findById(id);
         director.setStatus(Status.INACTIVE);
-        directorRepository.delete(director);
+        directorRepository.save(director);
     }
 
     // khoi phuc
     public void restore(Long id) {
         Director director = findById(id);
         director.setStatus(Status.ACTIVE);
-        directorRepository.delete(director);
+        directorRepository.save(director);
     }
 
 

@@ -54,9 +54,13 @@ public class AuthController {
     // POST /api/auth/refresh
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<AuthResponse>> refresh(
-            @Valid @RequestBody RefreshTokenRequest request, HttpServletResponse response) {
+            @CookieValue(name = "refreshToken", required = false) String refreshToken, HttpServletResponse response) {
 
-        AuthResponse data = authService.refreshToken(request);
+        if (refreshToken == null || refreshToken.isBlank()) {
+            return ResponseEntity.status(401).body(ApiResponse.error(401, "Refresh token is missing"));
+        }
+
+        AuthResponse data = authService.refreshToken(refreshToken);
         setCookies(response, data.getAccessToken(), data.getRefreshToken());
         return ResponseEntity.ok(ApiResponse.success(Message.REFRESH_SUCCESS, data));
     }

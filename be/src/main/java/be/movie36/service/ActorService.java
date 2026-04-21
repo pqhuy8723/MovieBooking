@@ -9,6 +9,9 @@ import be.movie36.exception.ErrorCode;
 import be.movie36.repository.ActorRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 
@@ -30,8 +33,14 @@ public class ActorService {
     }
 
     // lay danh sach actor
-    public List<ActorResponse> getAll() {
-        return actorRepository.findAll().stream().map(this::toResponse).toList();
+    public Page<ActorResponse> getAll(String name, Pageable pageable) {
+        Specification<Actor> spec = (root, query, criteriaBuilder) -> {
+            if (name == null || name.isBlank()) {
+                return criteriaBuilder.conjunction();
+            }
+            return criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + name.toLowerCase() + "%");
+        };
+        return actorRepository.findAll(spec, pageable).map(this::toResponse);
     }
 
     // tim kiem danh sach actor

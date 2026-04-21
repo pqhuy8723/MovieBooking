@@ -109,23 +109,26 @@
 }
 
 .admin-modal .modal-header {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-  color: var(--white);
-  padding: var(--spacing-xl);
+  background: #ffffff;
+  color: #111111;
+  padding: 32px 32px 16px 32px;
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   border-bottom: none;
 }
 
 .admin-modal .modal-title {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .admin-modal .btn-close {
-  filter: invert(1);
-  opacity: 0.9;
-  font-size: 1.5rem;
+  opacity: 0.6;
+  font-size: 1.2rem;
+  margin-top: 16px;
+  margin-right: 16px;
 }
 
 .admin-modal .btn-close:hover {

@@ -7,6 +7,9 @@ import be.movie36.dto.response.DirectorResponse;
 import be.movie36.service.DirectorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,8 +23,10 @@ public class DirectorController {
 
     // GET /api/directors
     @GetMapping
-    public ResponseEntity<ApiResponse<List<DirectorResponse>>> getAll() {
-        return ResponseEntity.ok(ApiResponse.success(Message.GET_DIRECTOR_SUCCESS, directorService.getAll()));
+    public ResponseEntity<ApiResponse<Page<DirectorResponse>>> getAll(
+            @RequestParam(required = false) String name,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success(Message.GET_DIRECTOR_SUCCESS, directorService.getAll(name, pageable)));
     }
 
     // GET /api/directors/search

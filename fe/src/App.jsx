@@ -9,6 +9,8 @@ import AdminMovies from "./Components/AdminPage/AdminMovies.jsx";
 import MoviePage from "./Components/pages/MoviePage.jsx";
 import LanguagesManager from "./Components/AdminPage/LanguagesManager.jsx";
 import GenresManager from "./Components/AdminPage/GenresManager.jsx";
+import ActorsManager from "./Components/AdminPage/ActorsManager.jsx";
+import DirectorsManager from "./Components/AdminPage/DirectorsManager.jsx";
 import MovieTypesManager from "./Components/AdminPage/MovieTypesManager.jsx";
 import ScreensManager from "./Components/AdminPage/ScreensManager.jsx";
 import Page404 from "./Components/pages/Page404.jsx";
@@ -56,6 +58,8 @@ function App() {
               <Route path="/managermovies" element={<AdminMovies />} />
               <Route path="/languages" element={<LanguagesManager />} />
               <Route path="/genres" element={<GenresManager />} />
+              <Route path="/actors" element={<ActorsManager />} />
+              <Route path="/directors" element={<DirectorsManager />} />
               <Route path="/movietypes" element={<MovieTypesManager />} />
               <Route path="/screens" element={<ScreensManager />} />
               <Route path="/tickets" element={<TicketManagement />} />

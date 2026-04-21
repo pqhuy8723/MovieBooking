@@ -23,9 +23,11 @@ public class AdminUserController {
     // GET /api/admin/users?page=0&size=5
     @GetMapping
     public ResponseEntity<ApiResponse<Page<UserResponse>>> getAllUsers(
+            @RequestParam(required = false) String gender,
+            @RequestParam(required = false) Boolean status,
             @PageableDefault(size = 5) Pageable pageable) {
 
-        Page<UserResponse> users = userService.getAllUsers(pageable);
+        Page<UserResponse> users = userService.getAllUsers(gender, status, pageable);
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách người dùng thành công", users));
     }
 

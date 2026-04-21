@@ -7,9 +7,11 @@ import be.movie36.enums.Status;
 import be.movie36.exception.AppException;
 import be.movie36.exception.ErrorCode;
 import be.movie36.repository.LanguageRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 @Service
@@ -29,9 +31,15 @@ public class LanguageService {
         return toResponse(languageRepository.save(language));
     }
 
-    // lay ra tat ca
-    public List<LanguageResponse> getAll() {
-        return languageRepository.findAll().stream().map(this::toResponse).toList();
+    // lay ra tat ca co phan trang va tim kiem
+    public Page<LanguageResponse> getAll(String name, Pageable pageable) {
+        Specification<Language> spec = (root, query, criteriaBuilder) -> {
+            if (name == null || name.isBlank()) {
+                return criteriaBuilder.conjunction();
+            }
+            return criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + name.toLowerCase() + "%");
+        };
+        return languageRepository.findAll(spec, pageable).map(this::toResponse);
     }
 
     // lay tat ca dang o trang thai active
@@ -71,7 +79,7 @@ public class LanguageService {
     }
 
     // chuyen inactive sang active
-    public  void restore(Long id){
+    public void restore(Long id) {
         Language language = findById(id);
         language.setStatus(Status.ACTIVE);
         languageRepository.save(language);

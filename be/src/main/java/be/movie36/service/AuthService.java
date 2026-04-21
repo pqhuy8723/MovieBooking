@@ -82,11 +82,11 @@ public class AuthService {
     // refresh token
 
     @Transactional
-    public AuthResponse refreshToken(RefreshTokenRequest request) {
+    public AuthResponse refreshToken(String refreshTokenStr) {
 
-        RefreshToken oldToken = refreshTokenService.verifyRefreshToken(request.getRefreshToken());
+        RefreshToken oldToken = refreshTokenService.verifyRefreshToken(refreshTokenStr);
 
-        refreshTokenService.revokeToken(request.getRefreshToken());
+        refreshTokenService.revokeToken(refreshTokenStr);
 
         return buildAuthResponse(oldToken.getUser());
     }

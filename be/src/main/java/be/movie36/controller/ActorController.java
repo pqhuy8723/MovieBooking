@@ -8,6 +8,9 @@ import be.movie36.dto.response.ApiResponse;
 import be.movie36.service.ActorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,8 +23,10 @@ public class ActorController {
     private final ActorService actorService;
     // GET /api/actors — lấy tất cả
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ActorResponse>>> getAll() {
-        return ResponseEntity.ok(ApiResponse.success(Message.GET_ACTOR_SUCCESS, actorService.getAll()));
+    public ResponseEntity<ApiResponse<Page<ActorResponse>>> getAll(
+            @RequestParam(required = false) String name,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success(Message.GET_ACTOR_SUCCESS, actorService.getAll(name, pageable)));
     }
     // GET /api/actors/search
     @GetMapping("/search")

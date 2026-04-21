@@ -41,7 +41,7 @@ const AccountManager = () => {
   const fetchAccounts = useCallback(async (page = 0) => {
     setLoading(true);
     try {
-      const res = await adminUserService.getAll(page, 5);
+      const res = await adminUserService.getAll(page, 5, filterGender, filterEnabled);
       const data = res.data || res;
       setAccounts(data.content || []);
       setTotalPages(data.totalPages || 0);
@@ -51,18 +51,11 @@ const AccountManager = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [filterGender, filterEnabled]);
 
   useEffect(() => { fetchAccounts(0); }, [fetchAccounts]);
 
-  const filtered = useMemo(() => {
-    return accounts.filter((u) => {
-      if (filterGender && u.gender !== filterGender) return false;
-      if (filterEnabled === "true" && !u.enabled) return false;
-      if (filterEnabled === "false" && u.enabled) return false;
-      return true;
-    });
-  }, [accounts, filterGender, filterEnabled]);
+
 
   const notify = (type, msg) => {
     if (type === "success") { setSuccessMessage(msg); setErrorMessage(null); }
@@ -213,7 +206,7 @@ const AccountManager = () => {
             </Form.Select>
           </Col>
           <Col xs={12} sm={4}>
-            <Button variant="outline-secondary" style={{ borderRadius: 8 }} onClick={() => { setFilterGender(""); setFilterEnabled(""); }}>
+            <Button variant="outline-secondary" style={{ borderRadius: 8, height: "46px", display: "inline-flex", alignItems: "center" }} onClick={() => { setFilterGender(""); setFilterEnabled(""); }}>
               <i className="bi bi-x-circle me-1" />Xóa bộ lọc
             </Button>
           </Col>
@@ -240,10 +233,10 @@ const AccountManager = () => {
                 </tr>
               </thead>
               <tbody>
-                {filtered.length === 0 ? (
+                {accounts.length === 0 ? (
                   <tr><td colSpan="8" className="admin-empty">Không có tài khoản nào phù hợp.</td></tr>
                 ) : (
-                  filtered.map((account) => {
+                  accounts.map((account) => {
                     const isAdmin = account.role === "ADMIN";
                     return (
                       <tr key={account.id}>
@@ -392,22 +385,22 @@ const AccountManager = () => {
 
       {/* ── MODAL: Khóa/Mở xác nhận ───────────────────── */}
       <Modal show={showToggleModal} onHide={() => setShowToggleModal(false)} centered backdrop="static">
-        <Modal.Header closeButton style={{ background: toggleTarget?.enabled ? "#dc3545" : "#198754", color: "#fff", borderBottom: "none" }}>
-          <Modal.Title>{toggleTarget?.enabled ? "Xác Nhận Khóa Tài Khoản" : "Xác Nhận Mở Khóa"}</Modal.Title>
+        <Modal.Header closeButton>
+          <Modal.Title>{toggleTarget?.enabled ? "Xác Nhận Khóa" : "Xác Nhận Mở Khóa"}</Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ padding: "24px 28px", fontSize: 15 }}>
+        <Modal.Body style={{ padding: "16px 24px", fontSize: 15 }}>
           Bạn có chắc muốn <strong>{toggleTarget?.enabled ? "khóa" : "mở khóa"}</strong> tài khoản{" "}
           <strong>{toggleTarget?.fullName || toggleTarget?.email}</strong>?
           {toggleTarget?.enabled && (
-            <div style={{ marginTop: 12, color: "#888", fontSize: 13 }}>
-              Tài khoản bị khóa sẽ không thể đăng nhập cho đến khi được mở lại.
+            <div style={{ marginTop: 12, color: "#dc3545", fontSize: 13, fontWeight: 500 }}>
+              <i className="bi bi-exclamation-triangle-fill me-1" /> Tài khoản bị khóa sẽ không thể đăng nhập.
             </div>
           )}
         </Modal.Body>
-        <Modal.Footer style={{ borderTop: "1px solid #eee" }}>
+        <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowToggleModal(false)}>Hủy</Button>
           <Button variant={toggleTarget?.enabled ? "danger" : "success"} onClick={handleToggle}>
-            {toggleTarget?.enabled ? "Xác nhận Khóa" : "Xác nhận Mở khóa"}
+            {toggleTarget?.enabled ? "Khóa tài khoản" : "Mở khóa"}
           </Button>
         </Modal.Footer>
       </Modal>
