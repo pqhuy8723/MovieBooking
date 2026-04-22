@@ -27,6 +27,10 @@ public class SeatService {
         Screen screen = screenRepository.findById(request.getScreenId())
                 .orElseThrow(() -> new AppException(ErrorCode.SCREEN_NOT_FOUND));
 
+        if (seatRepository.countByScreenId(screen.getId()) >= screen.getSeatingCapacity()) {
+            throw new AppException(ErrorCode.SEAT_CAPACITY_EXCEEDED);
+        }
+
         if (seatRepository.findByScreenIdAndName(screen.getId(), request.getName()).isPresent()) {
             throw new AppException(ErrorCode.SEAT_EXISTED);
         }
@@ -45,6 +49,11 @@ public class SeatService {
     public List<SeatResponse> generateSeats(SeatGenerateRequest request) {
         Screen screen = screenRepository.findById(request.getScreenId())
                 .orElseThrow(() -> new AppException(ErrorCode.SCREEN_NOT_FOUND));
+
+        int totalSeatsToGenerate = request.getRowCount() * request.getColumnCount();
+        if (totalSeatsToGenerate > screen.getSeatingCapacity()) {
+            throw new AppException(ErrorCode.SEAT_CAPACITY_EXCEEDED);
+        }
 
         if (seatRepository.existsByScreenId(screen.getId())) {
             throw new AppException(ErrorCode.SEAT_EXISTED);

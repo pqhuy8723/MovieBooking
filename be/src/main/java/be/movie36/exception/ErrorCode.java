@@ -26,13 +26,11 @@ public enum ErrorCode {
 
     GOOGLE_EMAIL_NOT_FOUND(400, "Không lấy được email từ Google"),
 
-
     GENRE_NOT_FOUND(404, "Không tìm thấy thể loại phim"),
     GENRE_EXISTED(400, "Thể loại phim đã tồn tại"),
 
     LANGUAGE_NOT_FOUND(404, "Không tìm thấy ngôn ngữ"),
     LANGUAGE_EXISTED(400, "Ngôn ngữ đã tồn tại"),
-
 
     MOVIE_TYPE_NOT_FOUND(404, "Không tìm thấy loại phim"),
     MOVIE_TYPE_EXISTED(400, "Loại phim đã tồn tại"),
@@ -48,7 +46,6 @@ public enum ErrorCode {
     MOVIE_EXISTED(400, "Phim đã tồn tại"),
     MOVIE_HAS_ACTIVE_SHOWTIME(400, "Không thể xóa phim đang có suất chiếu active"),
 
-
     OTP_INVALID(400, "OTP không hợp lệ"),
     OTP_EXPIRED(400, "OTP đã hết hạn, vui lòng yêu cầu OTP mới"),
     OTP_USED(400, "OTP đã được sử dụng"),
@@ -62,6 +59,7 @@ public enum ErrorCode {
 
     SEAT_NOT_FOUND(404, "Không tìm thấy ghế"),
     SEAT_EXISTED(400, "Ghế đã tồn tại trong phòng chiếu này"),
+    SEAT_CAPACITY_EXCEEDED(400, "Số lượng ghế vượt quá sức chứa của phòng chiếu"),
     INVALID_ROW_COL_COUNT(400, "Số lượng hàng ghế hoặc cột phải nằm trong khoảng (1-26)"),
 
     PRICING_NOT_FOUND(404, "Không tìm thấy bảng giá"),

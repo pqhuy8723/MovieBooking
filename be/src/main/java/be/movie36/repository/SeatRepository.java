@@ -17,6 +17,8 @@ public interface SeatRepository extends JpaRepository<Seat, Long> {
 
     boolean existsByScreenId(Long screenId);
 
+    long countByScreenId(Long screenId);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @org.springframework.data.jpa.repository.Query("SELECT s FROM Seat s WHERE s.id IN :ids ORDER BY s.id")
     List<Seat> findByIdsWithLock(@Param("ids") List<Long> ids);
