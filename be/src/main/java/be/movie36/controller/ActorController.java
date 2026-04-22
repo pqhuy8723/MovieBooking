@@ -28,6 +28,11 @@ public class ActorController {
             @PageableDefault(size = 10) Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.success(Message.GET_ACTOR_SUCCESS, actorService.getAll(name, pageable)));
     }
+    // GET /api/actors/active — lấy tất cả actor đang active (dùng cho dropdown form)
+    @GetMapping("/active")
+    public ResponseEntity<ApiResponse<List<ActorResponse>>> getAllActive() {
+        return ResponseEntity.ok(ApiResponse.success(Message.GET_ACTOR_SUCCESS, actorService.getAllActive()));
+    }
     // GET /api/actors/search
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<List<ActorResponse>>> search(@RequestParam String name) {

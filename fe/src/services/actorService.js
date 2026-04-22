@@ -9,6 +9,12 @@ const actorService = {
     return response.data;
   },
 
+  // GET /api/actors/active — lấy tất cả actor đang active (dùng cho form dropdown)
+  getAllActive: async () => {
+    const response = await axiosClient.get('/actors/active');
+    return response.data;
+  },
+
   // GET /api/actors/:id
   getById: async (id) => {
     const response = await axiosClient.get(`/actors/${id}`);

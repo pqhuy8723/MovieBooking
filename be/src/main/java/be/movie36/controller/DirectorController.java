@@ -29,6 +29,12 @@ public class DirectorController {
         return ResponseEntity.ok(ApiResponse.success(Message.GET_DIRECTOR_SUCCESS, directorService.getAll(name, pageable)));
     }
 
+    // GET /api/directors/active — lấy tất cả director đang active (dùng cho dropdown form)
+    @GetMapping("/active")
+    public ResponseEntity<ApiResponse<List<DirectorResponse>>> getAllActive() {
+        return ResponseEntity.ok(ApiResponse.success(Message.GET_DIRECTOR_SUCCESS, directorService.getAllActive()));
+    }
+
     // GET /api/directors/search
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<List<DirectorResponse>>> search(@RequestParam String name) {

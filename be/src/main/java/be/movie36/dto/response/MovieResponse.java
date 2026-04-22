@@ -25,7 +25,7 @@ public class MovieResponse {
     private List<GenreResponse> genres;
     private List<ActorResponse> actors;
     private List<DirectorResponse> directors;
-    private String language;
-    private String movieType;
+    private LanguageResponse language;
+    private MovieTypeResponse movieType;
     private LocalDateTime createdAt;
 }

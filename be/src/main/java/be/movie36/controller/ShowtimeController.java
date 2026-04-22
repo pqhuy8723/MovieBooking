@@ -27,6 +27,13 @@ public class ShowtimeController {
                 ApiResponse.success(Message.GET_SHOWTIME_SUCCESS, service.getByMovieAndDate(movieId, date)));
     }
 
+    // GET /api/showtimes/movie/{movieId}/all — lấy tất cả showtime của phim (admin)
+    @GetMapping("/movie/{movieId}/all")
+    public ResponseEntity<ApiResponse<List<ShowtimeResponse>>> getByMovieId(@PathVariable Long movieId) {
+        return ResponseEntity.ok(
+                ApiResponse.success(Message.GET_SHOWTIME_SUCCESS, service.getByMovieId(movieId)));
+    }
+
     @GetMapping("/screen/{screenId}")
     public ResponseEntity<ApiResponse<List<ShowtimeResponse>>> getByScreenAndDate(
             @PathVariable Long screenId,

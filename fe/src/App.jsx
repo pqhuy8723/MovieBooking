@@ -5,7 +5,6 @@ import AdminLayout from "./Components/layout/AdminLayout";
 import CinemaInfo from "./Components/pages/CinemaInfo";
 import TicketPricing from "./Components/pages/TicketPricing";
 import LoginRegister from "./Components/pages/LoginRegister.jsx";
-import AdminMovies from "./Components/AdminPage/AdminMovies.jsx";
 import MoviePage from "./Components/pages/MoviePage.jsx";
 import LanguagesManager from "./Components/AdminPage/LanguagesManager.jsx";
 import GenresManager from "./Components/AdminPage/GenresManager.jsx";
@@ -14,6 +13,9 @@ import DirectorsManager from "./Components/AdminPage/DirectorsManager.jsx";
 import MovieTypesManager from "./Components/AdminPage/MovieTypesManager.jsx";
 import CinemasManager from "./Components/AdminPage/CinemasManager.jsx";
 import ScreensManager from "./Components/AdminPage/ScreensManager.jsx";
+import SeatsManager from "./Components/AdminPage/SeatsManager.jsx";
+import TicketPricingManager from "./Components/AdminPage/TicketPricingManager.jsx";
+import MoviesManager from "./Components/AdminPage/MoviesManager.jsx";
 import Page404 from "./Components/pages/Page404.jsx";
 import HomePage from "./Components/pages/HomePage.jsx";
 import MovieDetail from "./Components/pages/MovieDetail.jsx";
@@ -56,7 +58,6 @@ function App() {
           <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
             <Route element={<AdminLayout />}>
               <Route path="/account" element={<AccountManager />} />
-              <Route path="/managermovies" element={<AdminMovies />} />
               <Route path="/languages" element={<LanguagesManager />} />
               <Route path="/genres" element={<GenresManager />} />
               <Route path="/actors" element={<ActorsManager />} />
@@ -64,6 +65,9 @@ function App() {
               <Route path="/movietypes" element={<MovieTypesManager />} />
               <Route path="/cinemas" element={<CinemasManager />} />
               <Route path="/screens" element={<ScreensManager />} />
+              <Route path="/seats" element={<SeatsManager />} />
+              <Route path="/pricings" element={<TicketPricingManager />} />
+              <Route path="/movies" element={<MoviesManager />} />
               <Route path="/tickets" element={<TicketManagement />} />
             </Route>
           </Route>

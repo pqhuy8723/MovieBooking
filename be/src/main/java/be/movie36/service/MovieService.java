@@ -5,6 +5,8 @@ import be.movie36.dto.response.ActorResponse;
 import be.movie36.dto.response.DirectorResponse;
 import be.movie36.dto.response.GenreResponse;
 import be.movie36.dto.response.MovieResponse;
+import be.movie36.dto.response.LanguageResponse;
+import be.movie36.dto.response.MovieTypeResponse;
 import be.movie36.entity.*;
 import be.movie36.enums.Status;
 import be.movie36.enums.AgeRating;
@@ -224,8 +226,16 @@ public class MovieService {
                                 .status(d.getStatus().name())
                                 .build())
                         .toList())
-                .language(movie.getLanguage() != null ? movie.getLanguage().getName() : null)
-                .movieType(movie.getMovieType() != null ? movie.getMovieType().getName() : null)
+                .language(movie.getLanguage() != null ? LanguageResponse.builder()
+                        .id(movie.getLanguage().getId())
+                        .name(movie.getLanguage().getName())
+                        .status(movie.getLanguage().getStatus().name())
+                        .build() : null)
+                .movieType(movie.getMovieType() != null ? MovieTypeResponse.builder()
+                        .id(movie.getMovieType().getId())
+                        .name(movie.getMovieType().getName())
+                        .status(movie.getMovieType().getStatus().name())
+                        .build() : null)
                 .createdAt(movie.getCreatedAt())
                 .build();
     }

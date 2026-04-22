@@ -46,6 +46,11 @@ public class DirectorService {
     }
 
 
+    // lay tat ca director dang active (dung cho dropdown)
+    public List<DirectorResponse> getAllActive() {
+        return directorRepository.findByStatus(Status.ACTIVE).stream().map(this::toResponse).toList();
+    }
+
     // tim kiem danh sach actor
     public List<DirectorResponse> search(String name) {
         return directorRepository.findByNameContainingIgnoreCase(name)

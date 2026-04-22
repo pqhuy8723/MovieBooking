@@ -87,6 +87,11 @@ public class ShowtimeService {
                 .stream().map(this::toResponse).toList();
     }
 
+    public List<ShowtimeResponse> getByMovieId(Long movieId) {
+        return showtimeRepository.findByMovieIdOrderByDateAscStartTimeAsc(movieId)
+                .stream().map(this::toResponse).toList();
+    }
+
     public List<ShowtimeResponse> getByScreenAndDate(Long screenId, LocalDate date) {
         return showtimeRepository.findByScreenIdAndDate(screenId, date)
                 .stream().map(this::toResponse).toList();

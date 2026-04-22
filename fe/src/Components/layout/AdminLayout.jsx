@@ -12,7 +12,9 @@ import {
   Ticket,
   People,
   PersonBadge,
-  Building
+  Building,
+  Grid,
+  Tag,
 } from 'react-bootstrap-icons';
 
 const AdminLayout = () => {
@@ -35,7 +37,7 @@ const AdminLayout = () => {
           <NavLink to="/account" className={({ isActive }) => `admin-nav-link ${isActive ? 'active-tab' : ''}`}>
             <Person size={20} /> Tài Khoản
           </NavLink>
-          <NavLink to="/managermovies" className={({ isActive }) => `admin-nav-link ${isActive ? 'active-tab' : ''}`}>
+          <NavLink to="/movies" className={({ isActive }) => `admin-nav-link ${isActive ? 'active-tab' : ''}`}>
             <Film size={20} /> Phim
           </NavLink>
           <NavLink to="/languages" className={({ isActive }) => `admin-nav-link ${isActive ? 'active-tab' : ''}`}>
@@ -58,6 +60,12 @@ const AdminLayout = () => {
           </NavLink>
           <NavLink to="/screens" className={({ isActive }) => `admin-nav-link ${isActive ? 'active-tab' : ''}`}>
             <Display size={20} /> Phòng Chiếu
+          </NavLink>
+          <NavLink to="/seats" className={({ isActive }) => `admin-nav-link ${isActive ? 'active-tab' : ''}`}>
+            <Grid size={20} /> Ghế Ngồi
+          </NavLink>
+          <NavLink to="/pricings" className={({ isActive }) => `admin-nav-link ${isActive ? 'active-tab' : ''}`}>
+            <Tag size={20} /> Bảng Giá
           </NavLink>
           <NavLink to="/tickets" className={({ isActive }) => `admin-nav-link ${isActive ? 'active-tab' : ''}`}>
             <Ticket size={20} /> Vé

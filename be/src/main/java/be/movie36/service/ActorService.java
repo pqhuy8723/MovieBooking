@@ -43,6 +43,11 @@ public class ActorService {
         return actorRepository.findAll(spec, pageable).map(this::toResponse);
     }
 
+    // lay tat ca actor dang active (dung cho dropdown)
+    public List<ActorResponse> getAllActive() {
+        return actorRepository.findByStatus(Status.ACTIVE).stream().map(this::toResponse).toList();
+    }
+
     // tim kiem danh sach actor
     public List<ActorResponse> search(String name) {
         return actorRepository.findByNameContainingIgnoreCase(name)
