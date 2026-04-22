@@ -47,7 +47,7 @@ const MoviesManager = () => {
     const [showtimesToAdd, setShowtimesToAdd] = useState([]);
     const [existingShowtimes, setExistingShowtimes] = useState([]);
     const [loadingShowtimes, setLoadingShowtimes] = useState(false);
-    const [editingShowtime, setEditingShowtime] = useState(null); // { id, date, startTime, endTime, price, screenId, cinemaId }
+    const [editingShowtime, setEditingShowtime] = useState(null);
     const [savingShowtime, setSavingShowtime] = useState(false);
 
     const [screensMap, setScreensMap] = useState({});
