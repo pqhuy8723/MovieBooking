@@ -3,6 +3,7 @@ package be.movie36.controller;
 import be.movie36.dto.request.MovieRequest;
 import be.movie36.dto.response.ApiResponse;
 import be.movie36.dto.response.MovieResponse;
+import be.movie36.dto.response.MovieSummaryResponse;
 import be.movie36.service.MovieService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,9 +27,10 @@ public class MovieController {
 
         // GET /api/movies/active — lấy phim đang active (PUBLIC)
         @GetMapping("/active")
-        public ResponseEntity<ApiResponse<List<MovieResponse>>> getAllActive() {
+        public ResponseEntity<ApiResponse<List<MovieSummaryResponse>>> getAllActive() {
                 return ResponseEntity.ok(
-                                ApiResponse.success("Lấy danh sách phim thành công", movieService.getAllActive()));
+                        ApiResponse.success("Lấy danh sách phim thành công",
+                                movieService.getAllActive()));
         }
 
         // GET /api/movies/{id} — lấy chi tiết phim (PUBLIC)

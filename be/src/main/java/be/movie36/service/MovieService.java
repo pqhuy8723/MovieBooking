@@ -1,12 +1,7 @@
 package be.movie36.service;
 
 import be.movie36.dto.request.MovieRequest;
-import be.movie36.dto.response.ActorResponse;
-import be.movie36.dto.response.DirectorResponse;
-import be.movie36.dto.response.GenreResponse;
-import be.movie36.dto.response.MovieResponse;
-import be.movie36.dto.response.LanguageResponse;
-import be.movie36.dto.response.MovieTypeResponse;
+import be.movie36.dto.response.*;
 import be.movie36.entity.*;
 import be.movie36.enums.Status;
 import be.movie36.enums.AgeRating;
@@ -63,9 +58,11 @@ public class MovieService {
         return movieRepository.findAll().stream().map(this::toResponse).toList();
     }
 
-    // lay ra danh sach active
-    public List<MovieResponse> getAllActive() {
-        return movieRepository.findByStatus(Status.ACTIVE).stream().map(this::toResponse).toList();
+    public List<MovieSummaryResponse> getAllActive() {
+        return movieRepository.findByStatus(Status.ACTIVE)
+                .stream()
+                .map(this::toSummaryResponse)
+                .toList();
     }
 
     // lay ra theo id
@@ -136,6 +133,8 @@ public class MovieService {
         movieRepository.save(movie);
     }
 
+
+
     // Helper
     private Movie findById(Long id) {
         return movieRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.MOVIE_TYPE_NOT_FOUND));
@@ -190,6 +189,29 @@ public class MovieService {
             throw new AppException(ErrorCode.INVALID_STATUS);
         }
     }
+
+    private MovieSummaryResponse toSummaryResponse(Movie movie) {
+        return MovieSummaryResponse.builder()
+                .id(movie.getId())
+                .title(movie.getTitle())
+                .poster(movie.getPoster())
+                .banner(movie.getBanner())
+                .videoUrl(movie.getVideoUrl())
+                .duration(movie.getDuration())
+                .genres(movie.getGenres().stream()
+                        .map(Genre::getName)
+                        .toList())
+                .movieType(movie.getMovieType() != null
+                        ? MovieTypeResponse.builder()
+                        .id(movie.getMovieType().getId())
+                        .name(movie.getMovieType().getName())
+                        .status(movie.getMovieType().getStatus().name())
+                        .build()
+                        : null)
+                .build();
+    }
+
+
 
     private MovieResponse toResponse(Movie movie) {
         return MovieResponse.builder()

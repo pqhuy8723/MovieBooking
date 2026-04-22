@@ -285,7 +285,7 @@ const ActorsManager = () => {
               <Form.Label style={labelStyle}>* Tên Diễn Viên</Form.Label>
               <Form.Control
                 type="text"
-                placeholder="Nhập tên diễn viên (VD: Hành Động, Hài Hước)"
+                placeholder="Nhập tên diễn viên"
                 value={currentActor ? currentActor.name : newActor}
                 onChange={(e) => {
                   currentActor

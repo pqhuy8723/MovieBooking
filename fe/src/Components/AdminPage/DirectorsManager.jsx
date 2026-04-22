@@ -285,7 +285,7 @@ const DirectorsManager = () => {
               <Form.Label style={labelStyle}>* Tên Đạo Diễn</Form.Label>
               <Form.Control
                 type="text"
-                placeholder="Nhập tên đạo diễn (VD: Hành Động, Hài Hước)"
+                placeholder="Nhập tên đạo diễn"
                 value={currentDirector ? currentDirector.name : newDirector}
                 onChange={(e) => {
                   currentDirector

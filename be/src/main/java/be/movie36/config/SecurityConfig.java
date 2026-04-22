@@ -85,7 +85,7 @@ public class SecurityConfig {
                                 // Genre, Language, MovieType — public (chỉ active)
                                 "/api/genres/active",
                                 "/api/languages/active",
-                                "/api/movie-types/active",
+                                "/api/movietype/active",
 
                                 // Actor, Director — public
                                 "/api/actors/**",

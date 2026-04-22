@@ -5,59 +5,54 @@ import Carousel from "react-bootstrap/Carousel";
 import { FaPlay } from "react-icons/fa";
 import "../../CSS/Nike.css";
 
+import movieService from "../../services/movieService";
+import movieTypeService from "../../services/movieTypeService";
+
 function HomePage() {
   const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [movieType, setMovieType] = useState([]);
-  const [genres, setGenres] = useState([]);
-  const [selectedMovieType, setSelectedMovieType] = useState(1);
+  const [selectedMovieType, setSelectedMovieType] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
   const [selectedMovie, setSelectedMovie] = useState(null);
 
   useEffect(() => {
-    setData([
-      {
-        id: 1, title: "Avengers: Secret Wars",
-        banner: "https://files.betacorp.vn/media/images/2026/04/16/thiet-ke-chua-co-ten-15-093903-160426-60.png",
-        poster: "https://via.placeholder.com/300x450/111111/FFFFFF?text=Movie+1",
-        movie_type: 1, genre_ids: [1], duration: 148, release_date: "2026-05-01",
-        video_url: "https://www.youtube.com/embed/tgbNymZ7vqY"
-      },
-      {
-        id: 2, title: "Deadpool & Wolverine",
-        banner: "https://via.placeholder.com/1440x600/1F1F21/FFFFFF?text=DEADPOOL+%26+WOLVERINE",
-        poster: "https://via.placeholder.com/300x450/111111/FFFFFF?text=Movie+2",
-        movie_type: 1, genre_ids: [1, 2], duration: 128, release_date: "2026-04-15",
-        video_url: "https://www.youtube.com/embed/tgbNymZ7vqY"
-      },
-      {
-        id: 3, title: "Spider-Man: Beyond",
-        banner: "https://via.placeholder.com/1440x600/28282A/FFFFFF?text=SPIDER-MAN+BEYOND",
-        poster: "https://via.placeholder.com/300x450/111111/FFFFFF?text=Movie+3",
-        movie_type: 2, genre_ids: [2], duration: 132, release_date: "2026-06-15",
-        video_url: "https://www.youtube.com/embed/tgbNymZ7vqY"
-      },
-    ]);
-    setGenres([
-      { id: 1, name: "Hành Động" },
-      { id: 2, name: "Phiêu Lưu" },
-    ]);
-    setMovieType([
-      { id: 1, name: "Đang Chiếu" },
-      { id: 2, name: "Sắp Chiếu" },
-    ]);
+    const fetchData = async () => {
+      try {
+        const [moviesRes, typesRes] = await Promise.all([
+          movieService.getAllActive(),
+          movieTypeService.getAllActive()
+        ]);
+
+        setData(moviesRes.data || []);
+
+        const types = typesRes.data || [];
+        setMovieType(types);
+
+        if (types.length > 0) {
+          setSelectedMovieType(types[0].id);
+        }
+      } catch (error) {
+        console.error("Error fetching homepage data:", error);
+      }
+    };
+
+    fetchData();
   }, []);
 
-  const filteredData = data.filter(
-    (movie) => String(movie.movie_type) === String(selectedMovieType)
-  );
 
-  const getGenreNames = (genreIds) =>
-    genreIds.map((id) => genres.find((g) => g.id === id)?.name).filter(Boolean).join(" · ");
+
+  const filteredData = selectedMovieType
+    ? data.filter(movie => movie.movieType?.id === selectedMovieType)
+    : data;
+
+
+  const getGenreNames = (genresList) =>
+    genresList ? genresList.map((g) => g.name).filter(Boolean).join(" · ") : "";
 
   const openModal = (movie) => {
-    setVideoUrl(movie.video_url);
+    setVideoUrl(movie.videoUrl || "");
     setSelectedMovie(movie);
     setShowModal(true);
   };
@@ -161,8 +156,8 @@ function HomePage() {
                 </div>
                 <div className="nike-card-body">
                   <div className="nike-card-title">{movie.title}</div>
-                  <div className="nike-caption">{getGenreNames(movie.genre_ids)}</div>
-                  <div className="nike-small" style={{ marginTop: '4px' }}>{movie.duration} phút</div>
+                  <div className="nike-caption">Thể loại: {movie.genres?.join(" ,") || ""}</div>
+                  <div className="nike-small" style={{ marginTop: '4px' }}>Thời lượng: {movie.duration} phút</div>
                 </div>
               </div>
             ))

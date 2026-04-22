@@ -24,4 +24,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
 
     @Query("SELECT COUNT(s) > 0 FROM Showtime s WHERE s.movie.id = :movieId AND s.status = be.movie36.enums.Status.ACTIVE")
     boolean hasActiveShowtime(@Param("movieId") Long movieId);
+
+    @Query("SELECT m FROM Movie m WHERE m.status = 'ACTIVE' AND m.movieType.id = :typeId")
+    List<Movie> findByTypeId(Long typeId);
 }
