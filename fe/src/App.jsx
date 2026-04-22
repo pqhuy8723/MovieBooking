@@ -12,6 +12,7 @@ import GenresManager from "./Components/AdminPage/GenresManager.jsx";
 import ActorsManager from "./Components/AdminPage/ActorsManager.jsx";
 import DirectorsManager from "./Components/AdminPage/DirectorsManager.jsx";
 import MovieTypesManager from "./Components/AdminPage/MovieTypesManager.jsx";
+import CinemasManager from "./Components/AdminPage/CinemasManager.jsx";
 import ScreensManager from "./Components/AdminPage/ScreensManager.jsx";
 import Page404 from "./Components/pages/Page404.jsx";
 import HomePage from "./Components/pages/HomePage.jsx";
@@ -61,6 +62,7 @@ function App() {
               <Route path="/actors" element={<ActorsManager />} />
               <Route path="/directors" element={<DirectorsManager />} />
               <Route path="/movietypes" element={<MovieTypesManager />} />
+              <Route path="/cinemas" element={<CinemasManager />} />
               <Route path="/screens" element={<ScreensManager />} />
               <Route path="/tickets" element={<TicketManagement />} />
             </Route>

@@ -11,7 +11,8 @@ import {
   Display,
   Ticket,
   People,
-  PersonBadge
+  PersonBadge,
+  Building
 } from 'react-bootstrap-icons';
 
 const AdminLayout = () => {
@@ -51,6 +52,9 @@ const AdminLayout = () => {
           </NavLink>
           <NavLink to="/movietypes" className={({ isActive }) => `admin-nav-link ${isActive ? 'active-tab' : ''}`}>
             <Collection size={20} /> Định Dạng
+          </NavLink>
+          <NavLink to="/cinemas" className={({ isActive }) => `admin-nav-link ${isActive ? 'active-tab' : ''}`}>
+            <Building size={20} /> Rạp Chiếu
           </NavLink>
           <NavLink to="/screens" className={({ isActive }) => `admin-nav-link ${isActive ? 'active-tab' : ''}`}>
             <Display size={20} /> Phòng Chiếu
