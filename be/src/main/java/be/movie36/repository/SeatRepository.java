@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.repository.query.Param;
@@ -12,6 +14,8 @@ import org.springframework.data.repository.query.Param;
 @Repository
 public interface SeatRepository extends JpaRepository<Seat, Long> {
     List<Seat> findByScreenId(Long screenId);
+
+    Page<Seat> findByScreenId(Long screenId, Pageable pageable);
 
     Optional<Seat> findByScreenIdAndName(Long screenId, String name);
 

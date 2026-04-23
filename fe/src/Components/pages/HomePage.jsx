@@ -7,9 +7,18 @@ import "../../CSS/Nike.css";
 
 import movieService from "../../services/movieService";
 import movieTypeService from "../../services/movieTypeService";
+import { useAuth } from "../../context/AuthContext";
 
 function HomePage() {
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+
+  // Admin redirect — admin không được vào trang home, nhảy thẳng vào dashboard
+  useEffect(() => {
+    if (isAuthenticated && user?.role === "ADMIN") {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
   const [data, setData] = useState([]);
   const [movieType, setMovieType] = useState([]);
   const [selectedMovieType, setSelectedMovieType] = useState(null);

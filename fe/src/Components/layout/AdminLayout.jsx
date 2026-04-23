@@ -15,6 +15,7 @@ import {
   Building,
   Grid,
   Tag,
+  GraphUp,
 } from 'react-bootstrap-icons';
 
 const AdminLayout = () => {
@@ -34,6 +35,9 @@ const AdminLayout = () => {
         </div>
 
         <div className="admin-nav">
+          <NavLink to="/dashboard" className={({ isActive }) => `admin-nav-link ${isActive ? 'active-tab' : ''}`}>
+            <GraphUp size={20} /> Doanh Thu
+          </NavLink>
           <NavLink to="/account" className={({ isActive }) => `admin-nav-link ${isActive ? 'active-tab' : ''}`}>
             <Person size={20} /> Tài Khoản
           </NavLink>

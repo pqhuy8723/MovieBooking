@@ -25,6 +25,12 @@ const showtimeService = {
         return response.data;
     },
 
+    // Lấy danh sách ghế đã đặt của suất chiếu
+    getBookedSeats: async (id) => {
+        const response = await axiosClient.get(`/showtimes/${id}/booked-seats`);
+        return response.data;
+    },
+
     // Thêm suất chiếu mới
     create: async (data) => {
         const response = await axiosClient.post('/showtimes', data);

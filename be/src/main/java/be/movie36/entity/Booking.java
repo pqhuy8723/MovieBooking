@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 import java.util.List;
+import be.movie36.enums.BookingStatus;
 
 @Entity
 @Table(name = "bookings", indexes = {
@@ -29,7 +30,7 @@ public class Booking {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private be.movie36.enums.BookingStatus status = be.movie36.enums.BookingStatus.PENDING;
+    private BookingStatus status = BookingStatus.PENDING;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

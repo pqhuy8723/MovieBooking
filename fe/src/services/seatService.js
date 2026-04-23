@@ -1,9 +1,15 @@
 import axiosClient from './axiosClient';
 
 const seatService = {
-    // GET /api/seats/screen/:screenId
+    // GET /api/seats/screen/:screenId (không phân trang, dùng cho booking)
     getAllByScreenId: async (screenId) => {
         const response = await axiosClient.get(`/seats/screen/${screenId}`);
+        return response.data;
+    },
+
+    // GET /api/seats/screen/:screenId/page?page=&size= (phân trang, dùng cho admin)
+    getAllByScreenIdPaged: async (screenId, page = 0, size = 10) => {
+        const response = await axiosClient.get(`/seats/screen/${screenId}/page`, { params: { page, size } });
         return response.data;
     },
 

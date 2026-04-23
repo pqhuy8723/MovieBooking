@@ -4,6 +4,10 @@ import { MdChair } from "react-icons/md";
 import { Modal } from "react-bootstrap";
 import { useAuth } from "../../context/AuthContext";
 import "../../CSS/Nike.css";
+import movieService from "../../services/movieService";
+import seatService from "../../services/seatService";
+import showtimeService from "../../services/showtimeService";
+import bookingService from "../../services/bookingService";
 
 function Booking() {
   const { id: movieId } = useParams();
@@ -12,9 +16,10 @@ function Booking() {
   const { user } = useAuth();
 
   const [movieData, setMovieData] = useState(null);
+  const [seatRows, setSeatRows] = useState([]);
   const [selectedSeats, setSelectedSeats] = useState([]);
-  const [reservedSeats, setReservedSeats] = useState(["A1", "B4", "C7", "D2"]);
-  const [lockedSeats, setLockedSeats] = useState(["E5", "E6"]);
+  const [reservedSeats, setReservedSeats] = useState([]);
+  const [lockedSeats, setLockedSeats] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [showModal, setShowModal] = useState(false);
   const [showAlertModal, setShowAlertModal] = useState(false);
@@ -23,35 +28,67 @@ function Booking() {
   const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
-    setMovieData({
-      id: movieId,
-      title: "Avengers: Secret Wars",
-      duration: 148,
-      poster: "https://via.placeholder.com/160x240/111111/FFFFFF?text=MOVIE",
-      language: "Tiếng Việt",
-      genre: "Hành Động · Phiêu Lưu",
-      cinema: "Movie 36 Cinema",
-      screen: "Phòng 1 — Standard",
-      selectedShowtime: {
-        id: showtimeId,
-        date: "2026-05-15",
-        start_time: "14:30",
-        end_time: "17:00",
-        price: 85000,
-      },
-    });
-  }, [movieId, showtimeId]);
+    const fetchBookingData = async () => {
+      try {
+        if (!showtimeId) return;
 
-  // Build 8 rows × 12 seats grid
-  const seatRows = Array.from({ length: 8 }, (_, ri) => {
-    const row = String.fromCharCode(65 + ri);
-    return Array.from({ length: 12 }, (_, si) => `${row}${si + 1}`);
-  });
+        const showtimeRes = await showtimeService.getById(showtimeId);
+        const showtime = showtimeRes.data;
+        
+        const movieRes = await movieService.getById(showtime.movieId);
+        const movie = movieRes.data;
+        
+        setMovieData({
+          id: movie.id,
+          title: movie.title,
+          duration: movie.duration,
+          poster: movie.poster,
+          language: movie.language?.name || "Chưa cập nhật",
+          genre: movie.genres?.map(g => g.name).join(" · ") || "Chưa cập nhật",
+          cinema: showtime.cinemaName,
+          screen: showtime.screenName,
+          selectedShowtime: {
+            id: showtime.id,
+            date: showtime.date,
+            start_time: showtime.startTime,
+            end_time: showtime.endTime,
+            price: showtime.price,
+          },
+        });
 
-  const getSeatState = (seatId) => {
-    if (reservedSeats.includes(seatId)) return "reserved";
-    if (lockedSeats.includes(seatId)) return "locked";
-    if (selectedSeats.includes(seatId)) return "selected";
+        const seatsRes = await seatService.getAllByScreenId(showtime.screenId);
+        const allSeats = seatsRes.data || [];
+        
+        const rowsObj = {};
+        allSeats.forEach(seat => {
+            const row = seat.name.charAt(0);
+            if (!rowsObj[row]) rowsObj[row] = [];
+            rowsObj[row].push(seat);
+        });
+        
+        const sortedRows = Object.keys(rowsObj).sort().map(rowKey => {
+            return rowsObj[rowKey].sort((a, b) => {
+                const numA = parseInt(a.name.substring(1));
+                const numB = parseInt(b.name.substring(1));
+                return numA - numB;
+            });
+        });
+        setSeatRows(sortedRows);
+        
+        const bookedRes = await showtimeService.getBookedSeats(showtimeId);
+        setReservedSeats(bookedRes.data || []);
+      } catch (error) {
+        console.error("Lỗi tải dữ liệu", error);
+      }
+    };
+    
+    fetchBookingData();
+  }, [showtimeId]);
+
+  const getSeatState = (seat) => {
+    if (reservedSeats.includes(seat.id)) return "reserved";
+    if (lockedSeats.includes(seat.id)) return "locked";
+    if (selectedSeats.find(s => s.id === seat.id)) return "selected";
     return "empty";
   };
 
@@ -71,33 +108,51 @@ function Booking() {
     }
   };
 
-  const handleSeatClick = (seatId) => {
-    const state = getSeatState(seatId);
+  const handleSeatClick = (seat) => {
+    const state = getSeatState(seat);
     if (state === "reserved" || state === "locked") return;
     setSelectedSeats(prev =>
-      prev.includes(seatId) ? prev.filter(s => s !== seatId) : [...prev, seatId]
+      prev.find(s => s.id === seat.id) ? prev.filter(s => s.id !== seat.id) : [...prev, seat]
     );
   };
 
   const handleContinue = () => {
     if (selectedSeats.length === 0) { setShowAlertModal(true); return; }
-    setLockedSeats(prev => [...new Set([...prev, ...selectedSeats])]);
+    setLockedSeats(prev => [...new Set([...prev, ...selectedSeats.map(s => s.id)])]);
     setShowModal(true);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setIsSending(true);
-    setTimeout(() => {
-      const id = "T" + Date.now();
-      setTicketId(id);
-      const booked = [...selectedSeats];
-      setReservedSeats(prev => [...new Set([...prev, ...booked])]);
-      setLockedSeats(prev => prev.filter(s => !booked.includes(s)));
-      setSelectedSeats([]);
-      setShowModal(false);
-      setShowSuccessModal(true);
-      setIsSending(false);
-    }, 600);
+    try {
+        const payload = {
+            showtimeId: movieData.selectedShowtime.id,
+            seatIds: selectedSeats.map(s => s.id)
+        };
+        const res = await bookingService.create(payload);
+        
+        const bookingResponse = res.data.data;
+        
+        if (paymentMethod === "vnpay") {
+            const vnpayRes = await bookingService.createVNPayUrl(bookingResponse.id);
+            if (vnpayRes.data && vnpayRes.data.data && vnpayRes.data.data.paymentUrl) {
+                window.location.href = vnpayRes.data.data.paymentUrl; 
+                return;
+            }
+        }
+        
+        setTicketId(bookingResponse.bookingCode);
+        const booked = selectedSeats.map(s => s.id);
+        setReservedSeats(prev => [...new Set([...prev, ...booked])]);
+        setSelectedSeats([]);
+        setShowModal(false);
+        setShowSuccessModal(true);
+    } catch (error) {
+        console.error("Lỗi đặt vé:", error);
+        alert(error.response?.data?.message || "Có lỗi xảy ra khi đặt vé!");
+    } finally {
+        setIsSending(false);
+    }
   };
 
   const formatPrice = (p) =>
@@ -152,14 +207,14 @@ function Booking() {
             {seatRows.map((row, ri) => (
               <div key={ri} style={{ display: 'flex', gap: '4px', marginBottom: '6px', alignItems: 'center', justifyContent: 'center' }}>
                 <span style={{ width: '20px', fontSize: '12px', fontWeight: '700', color: '#9E9EA0', textAlign: 'right', marginRight: '8px' }}>
-                  {String.fromCharCode(65 + ri)}
+                  {row[0]?.name.charAt(0)}
                 </span>
-                {row.map(seatId => {
-                  const state = getSeatState(seatId);
+                {row.map(seat => {
+                  const state = getSeatState(seat);
                   return (
-                    <div key={seatId} style={seatStyle(state)} onClick={() => handleSeatClick(seatId)}>
+                    <div key={seat.id} style={seatStyle(state)} onClick={() => handleSeatClick(seat)}>
                       <MdChair size={16} />
-                      <span style={{ fontSize: '9px', marginTop: '2px' }}>{seatId}</span>
+                      <span style={{ fontSize: '9px', marginTop: '2px' }}>{seat.name}</span>
                     </div>
                   );
                 })}
@@ -222,9 +277,9 @@ function Booking() {
             </div>
             {selectedSeats.length > 0 ? (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                {selectedSeats.sort().map(s => (
-                  <span key={s} style={{ background: '#111111', color: 'white', padding: '4px 10px', borderRadius: '30px', fontSize: '12px', fontWeight: '500' }}>
-                    {s}
+                {selectedSeats.map(s => s.name).sort().map(name => (
+                  <span key={name} style={{ background: '#111111', color: 'white', padding: '4px 10px', borderRadius: '30px', fontSize: '12px', fontWeight: '500' }}>
+                    {name}
                   </span>
                 ))}
               </div>
@@ -307,7 +362,7 @@ function Booking() {
               { label: "Phòng", value: movieData.screen },
               { label: "Ngày chiếu", value: formatDate(movieData.selectedShowtime?.date) },
               { label: "Giờ chiếu", value: movieData.selectedShowtime?.start_time },
-              { label: "Ghế", value: selectedSeats.sort().join(", ") },
+              { label: "Ghế", value: selectedSeats.map(s => s.name).sort().join(", ") },
               { label: "Thanh toán", value: paymentMethod === "cod" ? "COD" : "VNPay" },
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: '16px' }}>

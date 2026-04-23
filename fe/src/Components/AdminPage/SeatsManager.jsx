@@ -32,6 +32,12 @@ const SeatsManager = () => {
     const [validationError, setValidationError] = useState("");
     const [loading, setLoading] = useState(false);
 
+    // Pagination
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
+    const PAGE_SIZE = 10;
+
     // 1. Fetch Cinemas on mount
     useEffect(() => {
         fetchCinemas();
@@ -50,9 +56,12 @@ const SeatsManager = () => {
     // 3. Fetch Seats when Screen changes
     useEffect(() => {
         if (selectedScreenId) {
-            fetchSeats();
+            setCurrentPage(0);
+            fetchSeats(0);
         } else {
             setSeats([]);
+            setTotalPages(0);
+            setTotalElements(0);
         }
     }, [selectedScreenId]);
 
@@ -87,11 +96,16 @@ const SeatsManager = () => {
         }
     };
 
-    const fetchSeats = async () => {
+    const fetchSeats = async (page) => {
         try {
             setLoading(true);
-            const res = await seatService.getAllByScreenId(selectedScreenId);
-            setSeats(res.data || []);
+            const pageToFetch = page !== undefined ? page : currentPage;
+            const res = await seatService.getAllByScreenIdPaged(selectedScreenId, pageToFetch, PAGE_SIZE);
+            const pageData = res.data || {};
+            setSeats(pageData.content || []);
+            setTotalPages(pageData.totalPages || 0);
+            setTotalElements(pageData.totalElements || 0);
+            setCurrentPage(pageData.number || 0);
         } catch (err) {
             setError("Không thể tải danh sách ghế!");
         } finally {
@@ -326,7 +340,7 @@ const SeatsManager = () => {
                             ) : (
                                 seats.map((seat, index) => (
                                     <tr key={seat.id}>
-                                        <td>{index + 1}</td>
+                                        <td>{currentPage * PAGE_SIZE + index + 1}</td>
                                         <td className="fw-bold">{seat.name}</td>
                                         <td>{seat.type}</td>
                                         <td>
@@ -377,6 +391,61 @@ const SeatsManager = () => {
                             )}
                         </tbody>
                     </Table>
+                </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="d-flex justify-content-between align-items-center mt-3">
+                    <span className="text-muted" style={{ fontSize: '14px' }}>
+                        Hiển thị {currentPage * PAGE_SIZE + 1}–{Math.min((currentPage + 1) * PAGE_SIZE, totalElements)} / {totalElements} ghế
+                    </span>
+                    <div className="d-flex gap-1">
+                        <Button
+                            variant="outline-dark"
+                            size="sm"
+                            disabled={currentPage === 0}
+                            onClick={() => { setCurrentPage(0); fetchSeats(0); }}
+                        >
+                            «
+                        </Button>
+                        <Button
+                            variant="outline-dark"
+                            size="sm"
+                            disabled={currentPage === 0}
+                            onClick={() => { const p = currentPage - 1; setCurrentPage(p); fetchSeats(p); }}
+                        >
+                            ‹
+                        </Button>
+                        {Array.from({ length: totalPages }, (_, i) => i)
+                            .filter(i => Math.abs(i - currentPage) <= 2)
+                            .map(i => (
+                                <Button
+                                    key={i}
+                                    variant={i === currentPage ? "dark" : "outline-dark"}
+                                    size="sm"
+                                    onClick={() => { setCurrentPage(i); fetchSeats(i); }}
+                                >
+                                    {i + 1}
+                                </Button>
+                            ))}
+                        <Button
+                            variant="outline-dark"
+                            size="sm"
+                            disabled={currentPage >= totalPages - 1}
+                            onClick={() => { const p = currentPage + 1; setCurrentPage(p); fetchSeats(p); }}
+                        >
+                            ›
+                        </Button>
+                        <Button
+                            variant="outline-dark"
+                            size="sm"
+                            disabled={currentPage >= totalPages - 1}
+                            onClick={() => { const p = totalPages - 1; setCurrentPage(p); fetchSeats(p); }}
+                        >
+                            »
+                        </Button>
+                    </div>
                 </div>
             )}
 

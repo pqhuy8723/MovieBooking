@@ -11,6 +11,8 @@ import be.movie36.exception.ErrorCode;
 import be.movie36.repository.ScreenRepository;
 import be.movie36.repository.SeatRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -85,6 +87,13 @@ public class SeatService {
             throw new AppException(ErrorCode.SCREEN_NOT_FOUND);
         }
         return seatRepository.findByScreenId(screenId).stream().map(this::toResponse).toList();
+    }
+
+    public Page<SeatResponse> getAllByScreenId(Long screenId, Pageable pageable) {
+        if (!screenRepository.existsById(screenId)) {
+            throw new AppException(ErrorCode.SCREEN_NOT_FOUND);
+        }
+        return seatRepository.findByScreenId(screenId, pageable).map(this::toResponse);
     }
 
     public SeatResponse getById(Long id) {

@@ -1,6 +1,5 @@
 package be.movie36.security;
 
-import be.movie36.constant.Message;
 import be.movie36.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import be.movie36.repository.UserRepository;
@@ -17,7 +16,8 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email).orElseThrow(()-> new UsernameNotFoundException(ErrorCode.USER_NOT_FOUND + email));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException(ErrorCode.USER_NOT_FOUND + email));
         return new CustomUserDetails(user);
     }
 }

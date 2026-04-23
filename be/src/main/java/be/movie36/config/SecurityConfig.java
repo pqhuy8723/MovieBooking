@@ -78,7 +78,7 @@ public class SecurityConfig {
 
                                 // Movie — public
                                 "/api/movies/active",
-                                "/api/movies/{id}",
+                                "/api/movies/*",
                                 "/api/movies/genre/**",
                                 "/api/movies/type/**",
 

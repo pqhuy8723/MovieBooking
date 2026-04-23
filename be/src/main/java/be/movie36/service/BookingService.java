@@ -58,7 +58,7 @@ public class BookingService {
         }
 
         // Concurrency check: double booking
-        boolean isDoubleBooked = bookingRepository.existsBookingForSeatsInShowtime(showtime.getId(), request.getSeatIds());
+        boolean isDoubleBooked = bookingRepository.existsBookingForSeatsInShowtime(showtime.getId(), request.getSeatIds(), List.of(BookingStatus.PENDING, BookingStatus.PAID));
         if (isDoubleBooked) {
             throw new AppException(ErrorCode.SEAT_ALREADY_BOOKED);
         }
@@ -144,7 +144,7 @@ public class BookingService {
     @Transactional
     public void cancelExpiredBookings() {
         LocalDateTime cutoff = LocalDateTime.now().minusMinutes(10);
-        List<Booking> expiredBookings = bookingRepository.findExpiredBookings(cutoff);
+        List<Booking> expiredBookings = bookingRepository.findExpiredBookings(BookingStatus.PENDING, cutoff);
         for (Booking b : expiredBookings) {
             b.setStatus(BookingStatus.CANCELLED);
             bookingRepository.save(b);

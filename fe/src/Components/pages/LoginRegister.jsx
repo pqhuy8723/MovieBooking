@@ -45,7 +45,7 @@ const LoginRegister = () => {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      navigate(user.role === "ADMIN" ? "/account" : "/");
+      navigate(user.role === "ADMIN" ? "/dashboard" : "/");
     }
   }, [isAuthenticated, user, navigate]);
 
@@ -57,7 +57,7 @@ const LoginRegister = () => {
     if (result.success) {
       if (remember) {
         localStorage.setItem("rememberedEmail", email);
-        localStorage.removeItem("rememberedAccount"); // Clean up old unsecure data
+        localStorage.removeItem("rememberedAccount");
       } else {
         localStorage.removeItem("rememberedEmail");
         localStorage.removeItem("rememberedAccount");

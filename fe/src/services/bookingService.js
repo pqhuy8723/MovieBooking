@@ -2,19 +2,22 @@ import axiosClient from './axiosClient';
 
 const bookingService = {
   create: (bookingData) => {
-    return axiosClient.post('/api/bookings', bookingData);
+    return axiosClient.post('/bookings', bookingData);
   },
   getMyBookings: () => {
-    return axiosClient.get('/api/bookings/my-bookings');
+    return axiosClient.get('/bookings/my-bookings');
   },
   getById: (id) => {
-    return axiosClient.get(`/api/bookings/${id}`);
+    return axiosClient.get(`/bookings/${id}`);
   },
   pay: (id) => {
-    return axiosClient.put(`/api/bookings/${id}/pay`);
+    return axiosClient.put(`/bookings/${id}/pay`);
+  },
+  createVNPayUrl: (bookingId) => {
+    return axiosClient.post(`/payment/vnpay/create-payment`, null, { params: { bookingId } });
   },
   cancel: (id) => {
-    return axiosClient.delete(`/api/bookings/${id}`);
+    return axiosClient.delete(`/bookings/${id}`);
   }
 };
 

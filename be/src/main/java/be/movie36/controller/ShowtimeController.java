@@ -48,6 +48,12 @@ public class ShowtimeController {
                 ApiResponse.success(Message.GET_SHOWTIME_BYID, service.getById(id)));
     }
 
+    @GetMapping("/{id}/booked-seats")
+    public ResponseEntity<ApiResponse<List<Long>>> getBookedSeats(@PathVariable Long id) {
+        return ResponseEntity.ok(
+                ApiResponse.success(Message.GET_SHOWTIME_SUCCESS, service.getBookedSeats(id)));
+    }
+
     @PostMapping
     public ResponseEntity<ApiResponse<ShowtimeResponse>> create(
             @Valid @RequestBody ShowtimeRequest request) {

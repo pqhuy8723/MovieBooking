@@ -23,6 +23,7 @@ public class ShowtimeService {
     private final ShowtimeRepository showtimeRepository;
     private final MovieRepository movieRepository;
     private final ScreenRepository screenRepository;
+    private final be.movie36.repository.BookingRepository bookingRepository;
 
     public ShowtimeResponse create(ShowtimeRequest request) {
         Movie movie = movieRepository.findById(request.getMovieId())
@@ -80,6 +81,10 @@ public class ShowtimeService {
 
     public ShowtimeResponse getById(Long id) {
         return toResponse(findById(id));
+    }
+
+    public List<Long> getBookedSeats(Long id) {
+        return bookingRepository.findBookedSeatIdsForShowtime(id, java.util.List.of(be.movie36.enums.BookingStatus.PENDING, be.movie36.enums.BookingStatus.PAID));
     }
 
     public List<ShowtimeResponse> getByMovieAndDate(Long movieId, LocalDate date) {

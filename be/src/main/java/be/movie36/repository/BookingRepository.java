@@ -17,14 +17,22 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
        Optional<Booking> findByBookingCode(String bookingCode);
 
-       @Query("SELECT b FROM Booking b WHERE b.status = be.movie36.enums.BookingStatus.PENDING AND b.createdAt < :cutoffTime")
-       List<Booking> findExpiredBookings(@Param("cutoffTime") LocalDateTime cutoffTime);
+       @Query("SELECT b FROM Booking b WHERE b.status = :status AND b.createdAt < :cutoffTime")
+       List<Booking> findExpiredBookings(
+                     @Param("status") BookingStatus status,
+                     @Param("cutoffTime") LocalDateTime cutoffTime);
 
        @Query("SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END " +
                      "FROM Booking b JOIN b.seats s " +
                      "WHERE b.showtime.id = :showtimeId AND s.id IN :seatIds " +
-                     "AND b.status IN (be.movie36.enums.BookingStatus.PENDING, be.movie36.enums.BookingStatus.PAID)")
+                     "AND b.status IN :statuses")
        boolean existsBookingForSeatsInShowtime(
                      @Param("showtimeId") Long showtimeId,
-                     @Param("seatIds") List<Long> seatIds);
+                     @Param("seatIds") List<Long> seatIds,
+                     @Param("statuses") List<BookingStatus> statuses);
+
+       @Query("SELECT s.id FROM Booking b JOIN b.seats s WHERE b.showtime.id = :showtimeId AND b.status IN :statuses")
+       List<Long> findBookedSeatIdsForShowtime(
+                     @Param("showtimeId") Long showtimeId,
+                     @Param("statuses") List<BookingStatus> statuses);
 }

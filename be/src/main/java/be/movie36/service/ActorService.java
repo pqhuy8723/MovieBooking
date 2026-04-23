@@ -43,7 +43,7 @@ public class ActorService {
         return actorRepository.findAll(spec, pageable).map(this::toResponse);
     }
 
-    // lay tat ca actor dang active (dung cho dropdown)
+    // lay tat ca actor dang active
     public List<ActorResponse> getAllActive() {
         return actorRepository.findByStatus(Status.ACTIVE).stream().map(this::toResponse).toList();
     }
@@ -87,7 +87,6 @@ public class ActorService {
         actor.setStatus(Status.ACTIVE);
         actorRepository.save(actor);
     }
-
 
     // helper
     public Actor findById(Long id) {

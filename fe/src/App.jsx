@@ -24,6 +24,7 @@ import ShowTime from "./Components/pages/ShowtimePage.jsx";
 import Booking from "./Components/pages/Booking.jsx";
 import UserProfile from "./Components/pages/UserProfile.jsx";
 import TicketManagement from "./Components/AdminPage/TicketManagement.jsx";
+import RevenueDashboard from "./Components/AdminPage/RevenueDashboard.jsx";
 import PaymentSuccess from "./Components/pages/PaymentSuccess.jsx";
 import PaymentFailure from "./Components/pages/PaymentFailure.jsx";
 import { AuthProvider } from "./context/AuthContext";
@@ -57,6 +58,7 @@ function App() {
           {/* Admin Routes */}
           <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
             <Route element={<AdminLayout />}>
+              <Route path="/dashboard" element={<RevenueDashboard />} />
               <Route path="/account" element={<AccountManager />} />
               <Route path="/languages" element={<LanguagesManager />} />
               <Route path="/genres" element={<GenresManager />} />

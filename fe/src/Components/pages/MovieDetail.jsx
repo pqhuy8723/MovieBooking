@@ -1,39 +1,37 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Modal } from "react-bootstrap";
 import "../../CSS/Nike.css";
+import movieService from "../../services/movieService";
+import showtimeService from "../../services/showtimeService";
 
 const MovieDetail = () => {
   const { id } = useParams();
   const [movie, setMovie] = useState(null);
-  const [genres, setGenres] = useState([]);
-  const [languages, setLanguages] = useState([]);
-  const [cinema, setCinema] = useState({});
+  const [showtimes, setShowtimes] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedShowtime, setSelectedShowtime] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    setMovie({
-      id, title: "Avengers: Secret Wars",
-      description: "Sự kiện vũ trụ Marvel lớn nhất từ trước đến nay. Các siêu anh hùng phải đối mặt với mối đe dọa tàn khốc đến từ đa vũ trụ.",
-      director: "Anthony & Joe Russo",
-      actor: "Robert Downey Jr., Chris Evans, Scarlett Johansson",
-      genre_ids: [1, 2], duration: 148, language_id: 1,
-      release_date: "2026-05-01",
-      poster: "https://via.placeholder.com/400x600/111111/FFFFFF?text=AVENGERS",
-      video_url: "https://www.youtube.com/embed/tgbNymZ7vqY",
-      showtimes: [
-        { id: "S1", date: "2026-05-15", start_time: "10:00:00", price: 80000 },
-        { id: "S2", date: "2026-05-15", start_time: "14:30:00", price: 85000 },
-        { id: "S3", date: "2026-05-16", start_time: "19:00:00", price: 90000 },
-        { id: "S4", date: "2026-05-16", start_time: "21:30:00", price: 95000 },
-      ]
-    });
-    setGenres([{ id: 1, name: "Hành Động" }, { id: 2, name: "Phiêu Lưu" }]);
-    setLanguages([{ id: 1, name: "Tiếng Việt" }]);
-    setCinema({ name: "Movie 36 Cinema" });
-    setSelectedDate("2026-05-15");
+    const fetchData = async () => {
+      try {
+        const movieData = await movieService.getById(id);
+        setMovie(movieData.data);
+        
+        const showtimeData = await showtimeService.getByMovieId(id);
+        const activeShowtimes = showtimeData.data.filter(s => s.status === 'ACTIVE');
+        setShowtimes(activeShowtimes);
+        
+        if (activeShowtimes.length > 0) {
+            const uniqueDates = [...new Set(activeShowtimes.map(s => s.date))].sort();
+            setSelectedDate(uniqueDates[0]);
+        }
+      } catch (error) {
+        console.error("Lỗi khi tải dữ liệu phim:", error);
+      }
+    };
+    
+    fetchData();
   }, [id]);
 
   if (!movie) return (
@@ -42,25 +40,33 @@ const MovieDetail = () => {
     </div>
   );
 
-  const getGenreNames = ids => ids.map(id => genres.find(g => g.id === id)?.name).filter(Boolean).join(" · ");
-  const getLangName = lid => languages.find(l => l.id === lid)?.name;
+  const getGenreNames = (genresList) => genresList?.map(g => g.name).join(" · ") || "Chưa cập nhật";
+  const getActorNames = (actorsList) => actorsList?.map(a => a.name).join(", ") || "Chưa cập nhật";
+  const getDirectorNames = (directorsList) => directorsList?.map(d => d.name).join(", ") || "Chưa cập nhật";
   const formatDate = s => new Date(s).toLocaleDateString("vi-VN", { weekday: "long", day: "2-digit", month: "2-digit" });
   const formatTime = t => {
+    if (!t) return "";
     const [h, m] = t.split(":").map(Number);
     const d = new Date(); d.setHours(h, m, 0);
     return d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false });
   };
 
-  const uniqueDates = [...new Set(movie.showtimes.map(s => s.date))].sort();
-  const filteredShowtimes = movie.showtimes.filter(s => s.date === selectedDate);
+  const uniqueDates = [...new Set(showtimes.map(s => s.date))].sort();
+  const filteredShowtimes = showtimes.filter(s => s.date === selectedDate);
+  
+  const showtimesByCinema = filteredShowtimes.reduce((acc, s) => {
+    if (!acc[s.cinemaName]) acc[s.cinemaName] = [];
+    acc[s.cinemaName].push(s);
+    return acc;
+  }, {});
 
   const metaItems = [
-    { label: "Đạo diễn", value: movie.director },
-    { label: "Diễn viên", value: movie.actor },
-    { label: "Thể loại", value: getGenreNames(movie.genre_ids) },
+    { label: "Đạo diễn", value: getDirectorNames(movie.directors) },
+    { label: "Diễn viên", value: getActorNames(movie.actors) },
+    { label: "Thể loại", value: getGenreNames(movie.genres) },
     { label: "Thời lượng", value: `${movie.duration} phút` },
-    { label: "Ngôn ngữ", value: getLangName(movie.language_id) },
-    { label: "Khởi chiếu", value: movie.release_date },
+    { label: "Ngôn ngữ", value: movie.language?.name || "Chưa cập nhật" },
+    { label: "Khởi chiếu", value: movie.releaseDate || movie.release_date || "Chưa cập nhật" },
   ];
 
   return (
@@ -106,7 +112,7 @@ const MovieDetail = () => {
             {/* Showtime Picker */}
             <div style={{ borderTop: '2px solid #111111', paddingTop: '32px' }}>
               <h2 style={{ fontSize: '18px', fontWeight: '700', textTransform: 'uppercase', color: '#111111', marginBottom: '20px' }}>
-                Chọn suất chiếu — {cinema.name}
+                Chọn suất chiếu
               </h2>
 
               {/* Date pills */}
@@ -123,24 +129,37 @@ const MovieDetail = () => {
                 ))}
               </div>
 
-              {/* Time slots */}
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '32px' }}>
-                {filteredShowtimes.map(s => (
-                  <button
-                    key={s.id}
-                    onClick={() => setSelectedShowtime(s)}
-                    style={{
-                      padding: '12px 20px', borderRadius: '8px', cursor: 'pointer', textAlign: 'center',
-                      border: selectedShowtime?.id === s.id ? '2px solid #111111' : '1.5px solid #CACACB',
-                      background: selectedShowtime?.id === s.id ? '#111111' : '#FAFAFA',
-                      color: selectedShowtime?.id === s.id ? 'white' : '#111111',
-                      fontWeight: '500', transition: 'all 200ms ease',
-                    }}
-                  >
-                    <div style={{ fontSize: '18px', fontWeight: '700' }}>{formatTime(s.start_time)}</div>
-                    <div style={{ fontSize: '12px', marginTop: '4px', opacity: 0.8 }}>{Number(s.price).toLocaleString()} đ</div>
-                  </button>
-                ))}
+              {/* Time slots grouped by cinema */}
+              <div style={{ marginBottom: '32px' }}>
+                {Object.keys(showtimesByCinema).length === 0 ? (
+                  <p style={{ fontSize: '14px', color: '#707072' }}>Không có suất chiếu nào trong ngày này.</p>
+                ) : (
+                  Object.keys(showtimesByCinema).map(cinemaName => (
+                    <div key={cinemaName} style={{ marginBottom: '24px' }}>
+                      <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#111111', marginBottom: '12px' }}>
+                        {cinemaName}
+                      </h3>
+                      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                        {showtimesByCinema[cinemaName].map(s => (
+                          <button
+                            key={s.id}
+                            onClick={() => setSelectedShowtime(s)}
+                            style={{
+                              padding: '12px 20px', borderRadius: '8px', cursor: 'pointer', textAlign: 'center',
+                              border: selectedShowtime?.id === s.id ? '2px solid #111111' : '1.5px solid #CACACB',
+                              background: selectedShowtime?.id === s.id ? '#111111' : '#FAFAFA',
+                              color: selectedShowtime?.id === s.id ? 'white' : '#111111',
+                              fontWeight: '500', transition: 'all 200ms ease', minWidth: '90px'
+                            }}
+                          >
+                            <div style={{ fontSize: '18px', fontWeight: '700' }}>{formatTime(s.startTime)}</div>
+                            <div style={{ fontSize: '12px', marginTop: '4px', opacity: 0.8 }}>{Number(s.price).toLocaleString()} đ</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
 
               <button
@@ -156,12 +175,12 @@ const MovieDetail = () => {
         </div>
 
         {/* Trailer */}
-        {movie.video_url && (
+        {movie.videoUrl && (
           <div style={{ marginTop: '80px', borderTop: '1px solid #E5E5E5', paddingTop: '48px' }}>
             <h2 className="nike-h1" style={{ marginBottom: '24px' }}>TRAILER</h2>
             <div style={{ position: 'relative', paddingBottom: '56.25%', background: '#111111' }}>
               <iframe
-                src={movie.video_url}
+                src={movie.videoUrl}
                 title="Trailer"
                 frameBorder="0"
                 allowFullScreen

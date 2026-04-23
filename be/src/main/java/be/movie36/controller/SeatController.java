@@ -8,6 +8,10 @@ import be.movie36.dto.response.SeatResponse;
 import be.movie36.service.SeatService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +27,16 @@ public class SeatController {
     public ResponseEntity<ApiResponse<List<SeatResponse>>> getAllByScreenId(@PathVariable Long screenId) {
         return ResponseEntity.ok(
                 ApiResponse.success(Message.GET_SEAT_SUCCESS, service.getAllByScreenId(screenId)));
+    }
+
+    @GetMapping("/screen/{screenId}/page")
+    public ResponseEntity<ApiResponse<Page<SeatResponse>>> getAllByScreenIdPaged(
+            @PathVariable Long screenId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
+        return ResponseEntity.ok(
+                ApiResponse.success(Message.GET_SEAT_SUCCESS, service.getAllByScreenId(screenId, pageable)));
     }
 
     @GetMapping("/{id}")
