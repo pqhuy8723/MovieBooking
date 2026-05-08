@@ -1,7 +1,7 @@
 import axiosClient from './axiosClient';
 
 const movieTypeService = {
-    // GET /api/movietype — lấy tất cả (ADMIN)
+    // GET /api/movietype — lấy tất cả 
     getAll: async () => {
         const response = await axiosClient.get('/movietype');
         return response.data;
@@ -19,25 +19,25 @@ const movieTypeService = {
         return response.data;
     },
 
-    // POST /api/movietype (ADMIN)
+    // POST /api/movietype 
     create: async (data) => {
         const response = await axiosClient.post('/movietype', data);
         return response.data;
     },
 
-    // PUT /api/movietype/:id (ADMIN)
+    // PUT /api/movietype/:id 
     update: async (id, data) => {
         const response = await axiosClient.put(`/movietype/${id}`, data);
         return response.data;
     },
 
-    // DELETE /api/movietype/:id (ADMIN)
+    // DELETE /api/movietype/:id 
     delete: async (id) => {
         const response = await axiosClient.delete(`/movietype/${id}`);
         return response.data;
     },
 
-    // PATCH /api/movietype/:id/restore (ADMIN)
+    // PATCH /api/movietype/:id/restore 
     restore: async (id) => {
         const response = await axiosClient.patch(`/movietype/${id}/restore`);
         return response.data;

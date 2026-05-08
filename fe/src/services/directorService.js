@@ -9,7 +9,7 @@ const directorService = {
     return response.data;
   },
 
-  // GET /api/directors/active — lấy tất cả director đang active (dùng cho form dropdown)
+  // GET /api/directors/active — lấy tất cả director đang active 
   getAllActive: async () => {
     const response = await axiosClient.get('/directors/active');
     return response.data;

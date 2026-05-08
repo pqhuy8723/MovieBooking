@@ -1,15 +1,11 @@
 package be.movie36.controller;
 
 import be.movie36.constant.Message;
-import be.movie36.dto.request.AdminUpdateUserRequest;
-import be.movie36.dto.request.RegisterRequest;
 import be.movie36.dto.response.ApiResponse;
 import be.movie36.dto.response.UserResponse;
 import be.movie36.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -42,5 +38,4 @@ public class UserController {
         UserResponse profile = userService.updateProfile(userDetails.getUsername(), request);
         return ResponseEntity.ok(ApiResponse.success("Cập nhật thông tin thành công", profile));
     }
-
 }

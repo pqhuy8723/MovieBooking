@@ -6,7 +6,6 @@ import be.movie36.security.OAuth2SuccessHandler;
 import be.movie36.security.jwt.JwtAuthenticationEntryPoint;
 import be.movie36.security.jwt.JwtAuthenticationFilter;
 import be.movie36.service.OAuth2UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,123 +27,123 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final CustomUserDetailsService userDetailsService;
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-    private final OAuth2UserService oAuth2UserService;
-    private final OAuth2SuccessHandler oAuth2SuccessHandler;
-    private final OAuth2FailureHandler oAuth2FailureHandler;
+        private final CustomUserDetailsService userDetailsService;
+        private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+        private final OAuth2UserService oAuth2UserService;
+        private final OAuth2SuccessHandler oAuth2SuccessHandler;
+        private final OAuth2FailureHandler oAuth2FailureHandler;
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(12);
-    }
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder(12);
+        }
 
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
-    }
+        @Bean
+        public AuthenticationProvider authenticationProvider() {
+                DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
+                authProvider.setPasswordEncoder(passwordEncoder());
+                return authProvider;
+        }
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
+        @Bean
+        public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+                return config.getAuthenticationManager();
+        }
 
-    @Bean
-    public HttpSessionOAuth2AuthorizationRequestRepository authorizationRequestRepository() {
-        return new HttpSessionOAuth2AuthorizationRequestRepository();
-    }
+        @Bean
+        public HttpSessionOAuth2AuthorizationRequestRepository authorizationRequestRepository() {
+                return new HttpSessionOAuth2AuthorizationRequestRepository();
+        }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(org.springframework.security.config.Customizer.withDefaults())
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                // Auth — public
-                                "/api/auth/register",
-                                "/api/auth/login",
-                                "/api/auth/refresh",
-                                "/api/auth/forgot-password",
-                                "/api/auth/verify-otp",
-                                "/api/auth/reset-password",
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http
+                                .cors(org.springframework.security.config.Customizer.withDefaults())
+                                .csrf(csrf -> csrf.disable())
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers(
+                                                                // Auth — public
+                                                                "/api/auth/register",
+                                                                "/api/auth/login",
+                                                                "/api/auth/refresh",
+                                                                "/api/auth/forgot-password",
+                                                                "/api/auth/verify-otp",
+                                                                "/api/auth/reset-password",
 
-                                // OAuth2
-                                "/oauth2/**",
-                                "/login/oauth2/code/**",
+                                                                // OAuth2
+                                                                "/oauth2/**",
+                                                                "/login/oauth2/code/**",
 
-                                // Movie — public
-                                "/api/movies/active",
-                                "/api/movies/*",
-                                "/api/movies/genre/**",
-                                "/api/movies/type/**",
+                                                                // Movie — public
+                                                                "/api/movies/active",
+                                                                "/api/movies/{id}",
+                                                                "/api/movies/genre/**",
+                                                                "/api/movies/type/**",
 
-                                // Genre, Language, MovieType — public (chỉ active)
-                                "/api/genres/active",
-                                "/api/languages/active",
-                                "/api/movietype/active",
+                                                                // Genre, Language, MovieType — public (chỉ active)
+                                                                "/api/genres/active",
+                                                                "/api/languages/active",
+                                                                "/api/movie-types/active",
 
-                                // Actor, Director — public
-                                "/api/actors/**",
-                                "/api/directors/**",
+                                                                // Actor, Director — public
+                                                                "/api/actors/**",
+                                                                "/api/directors/**",
 
-                                // Cinema, Screen, Seat, Pricing, Showtime — public
-                                "/api/cinemas/active",
-                                "/api/cinemas/{id}",
-                                "/api/screens/cinema/**",
-                                "/api/seats/screen/**",
-                                "/api/ticket-pricings/active",
-                                "/api/ticket-pricings/{id}",
-                                "/api/showtimes/movie/**",
-                                "/api/showtimes/screen/**",
-                                "/api/showtimes/{id}",
+                                                                // Cinema, Screen, Seat, Pricing, Showtime — public
+                                                                "/api/cinemas/active",
+                                                                "/api/cinemas/{id}",
+                                                                "/api/screens/cinema/**",
+                                                                "/api/seats/screen/**",
+                                                                "/api/ticket-pricings/active",
+                                                                "/api/ticket-pricings/{id}",
+                                                                "/api/showtimes/movie/**",
+                                                                "/api/showtimes/screen/**",
+                                                                "/api/showtimes/{id}",
 
-                                // Swagger
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
+                                                                // Swagger
+                                                                "/swagger-ui/**",
+                                                                "/v3/api-docs/**",
 
-                                // Payment Callback
-                                "/api/payment/vnpay/vnpay-return",
+                                                                // Payment Callback
+                                                                "/api/payment/vnpay/vnpay-return",
 
-                                // Static
-                                "/css/**",
-                                "/js/**",
-                                "/images/**")
-                        .permitAll()
+                                                                // Static
+                                                                "/css/**",
+                                                                "/js/**",
+                                                                "/images/**")
+                                                .permitAll()
 
-                        .requestMatchers(
-                                "/api/admin/**",
-                                "/api/admin/users/**",
-                                "/api/movies/**",
-                                "/api/genres/**",
-                                "/api/languages/**",
-                                "/api/movie-types/**",
-                                "/api/cinemas/**",
-                                "/api/screens/**",
-                                "/api/seats/**",
-                                "/api/ticket-pricings/**",
-                                "/api/showtimes/**")
-                        .hasRole("ADMIN")
+                                                .requestMatchers(
+                                                                "/api/admin/**",
+                                                                "/api/admin/users/**",
+                                                                "/api/movies/**",
+                                                                "/api/genres/**",
+                                                                "/api/languages/**",
+                                                                "/api/movie-types/**",
+                                                                "/api/cinemas/**",
+                                                                "/api/screens/**",
+                                                                "/api/seats/**",
+                                                                "/api/ticket-pricings/**",
+                                                                "/api/showtimes/**")
+                                                .hasRole("ADMIN")
 
-                        .anyRequest().authenticated())
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(jwtAuthenticationEntryPoint))
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .oauth2Login(oauth2 -> oauth2
-                        .authorizationEndpoint(authorization -> authorization
-                                .authorizationRequestRepository(
-                                        authorizationRequestRepository()))
-                        .userInfoEndpoint(userInfo -> userInfo
-                                .userService(oAuth2UserService))
-                        .successHandler(oAuth2SuccessHandler)
-                        .failureHandler(oAuth2FailureHandler))
-                .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                                                .anyRequest().authenticated())
+                                .exceptionHandling(ex -> ex
+                                                .authenticationEntryPoint(jwtAuthenticationEntryPoint))
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .oauth2Login(oauth2 -> oauth2
+                                                .authorizationEndpoint(authorization -> authorization
+                                                                .authorizationRequestRepository(
+                                                                                authorizationRequestRepository()))
+                                                .userInfoEndpoint(userInfo -> userInfo
+                                                                .userService(oAuth2UserService))
+                                                .successHandler(oAuth2SuccessHandler)
+                                                .failureHandler(oAuth2FailureHandler))
+                                .authenticationProvider(authenticationProvider())
+                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+                return http.build();
+        }
 }

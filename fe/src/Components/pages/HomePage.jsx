@@ -13,7 +13,6 @@ function HomePage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
 
-  // Admin redirect — admin không được vào trang home, nhảy thẳng vào dashboard
   useEffect(() => {
     if (isAuthenticated && user?.role === "ADMIN") {
       navigate("/dashboard", { replace: true });

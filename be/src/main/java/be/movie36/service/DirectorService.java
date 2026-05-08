@@ -46,7 +46,7 @@ public class DirectorService {
     }
 
 
-    // lay tat ca director dang active (dung cho dropdown)
+    // lay tat ca director dang active 
     public List<DirectorResponse> getAllActive() {
         return directorRepository.findByStatus(Status.ACTIVE).stream().map(this::toResponse).toList();
     }
