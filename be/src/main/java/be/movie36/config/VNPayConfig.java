@@ -2,6 +2,7 @@ package be.movie36.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import jakarta.servlet.http.HttpServletRequest;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -27,13 +28,32 @@ public class VNPayConfig {
     public String getVnpPayUrl() { return vnpPayUrl; }
     public String getVnpReturnUrl() { return vnpReturnUrl; }
     
+    public String getIpAddress(HttpServletRequest request) {
+        String ipAddress;
+        try {
+            ipAddress = request.getHeader("X-FORWARDED-FOR");
+            if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
+                ipAddress = request.getHeader("Proxy-Client-IP");
+            }
+            if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
+                ipAddress = request.getHeader("WL-Proxy-Client-IP");
+            }
+            if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
+                ipAddress = request.getRemoteAddr();
+            }
+        } catch (Exception e) {
+            ipAddress = "127.0.0.1";
+        }
+        return ipAddress;
+    }
+
     public String hmacSHA512(final String key, final String data) {
         try {
             if (key == null || data == null) {
                 throw new NullPointerException();
             }
             final Mac hmac512 = Mac.getInstance("HmacSHA512");
-            byte[] hmacKeyBytes = key.getBytes();
+            byte[] hmacKeyBytes = key.getBytes(StandardCharsets.UTF_8);
             final SecretKeySpec secretKey = new SecretKeySpec(hmacKeyBytes, "HmacSHA512");
             hmac512.init(secretKey);
             byte[] dataBytes = data.getBytes(StandardCharsets.UTF_8);
@@ -52,25 +72,20 @@ public class VNPayConfig {
     public String hashAllFields(Map<String, String> fields) {
         java.util.List<String> fieldNames = new java.util.ArrayList<>(fields.keySet());
         java.util.Collections.sort(fieldNames);
-        StringBuilder sb = new StringBuilder();
-        java.util.Iterator<String> itr = fieldNames.iterator();
-        while (itr.hasNext()) {
-            String fieldName = itr.next();
+        java.util.List<String> builtFields = new java.util.ArrayList<>();
+        for (String fieldName : fieldNames) {
             String fieldValue = fields.get(fieldName);
             if ((fieldValue != null) && (fieldValue.length() > 0)) {
                 try {
-                    sb.append(java.net.URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
-                    sb.append("=");
-                    sb.append(java.net.URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
+                    String encodedKey = java.net.URLEncoder.encode(fieldName, StandardCharsets.UTF_8.toString());
+                    String encodedValue = java.net.URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString());
+                    builtFields.add(encodedKey + "=" + encodedValue);
                 } catch (java.io.UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
             }
-            if (itr.hasNext()) {
-                sb.append("&");
-            }
         }
-        return sb.toString(); // Return query without hash for appending
+        return String.join("&", builtFields);
     }
 
     public String createQueryString(Map<String, String> fields) {

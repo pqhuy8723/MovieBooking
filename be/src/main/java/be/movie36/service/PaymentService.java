@@ -48,7 +48,7 @@ public class PaymentService {
         vnp_Params.put("vnp_Locale", locate);
 
         vnp_Params.put("vnp_ReturnUrl", vnPayConfig.getVnpReturnUrl());
-        vnp_Params.put("vnp_IpAddr", "127.0.0.1");
+        vnp_Params.put("vnp_IpAddr", vnPayConfig.getIpAddress(request));
 
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -60,9 +60,10 @@ public class PaymentService {
         vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
 
         String queryUrl = vnPayConfig.createQueryString(vnp_Params);
+        String paymentUrl = vnPayConfig.getVnpPayUrl() + "?" + queryUrl;
 
         return PaymentResponse.builder()
-                .paymentUrl(vnPayConfig.getVnpPayUrl() + "?" + queryUrl)
+                .paymentUrl(paymentUrl)
                 .build();
     }
 
